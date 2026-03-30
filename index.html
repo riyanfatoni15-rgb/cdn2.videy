@@ -46,7 +46,7 @@
         <div>
           <p class="text-sm text-gray-300 mb-2">Link Custom (share ini):</p>
           <div id="playerUrlDisplay" 
-               class="bg-gray-900 p-4 rounded-xl break-all text-sm font-mono text-blue-300 whitespace-pre-wrap max-h-60 overflow-auto"></div>
+               class="bg-gray-900 p-4 rounded-xl break-all text-sm font-mono text-blue-300 whitespace-pre-wrap max-h-60 overflow-auto font-medium"></div>
 
           <button onclick="copyLink()" 
                   class="mt-3 w-full bg-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-600">
@@ -68,7 +68,7 @@
     </div>
   </div>
 
-  <!-- Player Mode -->
+  <!-- Player Mode (Bersih) -->
   <div id="player" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
     <video id="playerVideo" controls playsinline class="flex-1 w-full h-full object-contain"></video>
     
@@ -88,20 +88,17 @@
   <script>
     let currentPlayerUrls = [];
     const baseDomain = 'cdn2-videy.vercel.app';
-    const DIRECT_AD_URL = 'https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101';
 
     function triggerDirectAd() {
       if (sessionStorage.getItem('adTriggered')) return;
       sessionStorage.setItem('adTriggered', 'true');
-      
       setTimeout(() => {
         try {
-          let newWin = window.open(DIRECT_AD_URL, '_blank');
-          if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+          let newWin = window.open('https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101', '_blank');
+          if (!newWin || newWin.closed) {
             const a = document.createElement('a');
-            a.href = DIRECT_AD_URL;
+            a.href = 'https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101';
             a.target = '_blank';
-            a.rel = 'noopener noreferrer';
             a.style.display = 'none';
             document.body.appendChild(a);
             a.click();
@@ -111,10 +108,10 @@
       }, 600);
     }
 
+    // Player Mode
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
-      const videoId = params.get('v');
-
+      let videoId = params.get('v');
       if (videoId && videoId.length >= 4) {
         document.getElementById('generator').style.display = 'none';
         document.getElementById('result').style.display = 'none';
@@ -127,12 +124,10 @@
         videoElement.src = mp4Url;
 
         videoElement.addEventListener('play', () => triggerDirectAd(), { once: true });
-        videoElement.addEventListener('click', () => {
-          if (videoElement.paused && !sessionStorage.getItem('adTriggered')) triggerDirectAd();
-        }, { once: true });
       }
     });
 
+    // === GENERATOR UTAMA ===
     function generateVideo() {
       const textarea = document.getElementById('linkInput');
       const useMp4 = document.getElementById('useMp4').checked;
@@ -157,30 +152,33 @@
           if (!id) {
             const pathParts = url.pathname.split('/').filter(p => p);
             if (pathParts.length >= 1) {
-              let last = pathParts[pathParts.length - 1];
-              id = last.replace(/\.mp4$/i, '');
+              id = pathParts[pathParts.length - 1].replace(/\.mp4$/i, '');
             }
           }
 
-          if (!id && url.pathname.endsWith('.mp4')) {
+          if (!id && url.pathname.toLowerCase().endsWith('.mp4')) {
             id = url.pathname.split('/').pop().replace(/\.mp4$/i, '');
           }
 
           if (!id || id.length < 4) continue;
 
-          // === PERBAIKAN UTAMA DI SINI ===
+          // ✅ PERBAIKAN: Link dibuat dengan benar
           let playerUrl = `https://\( {baseDomain}?v= \){id}`;
-          if (useMp4) playerUrl += '.mp4';
+          if (useMp4) {
+            playerUrl += '.mp4';
+          }
 
           results.push(playerUrl);
           currentPlayerUrls.push(playerUrl);
 
         } catch (e) {
-          console.log('Skip link invalid:', input);
+          console.log('Skip invalid link:', input);
         }
       }
 
-      if (results.length === 0) return alert('Tidak ada link yang valid.');
+      if (results.length === 0) {
+        return alert('Tidak ada link yang valid.');
+      }
 
       // Tampilkan hasil
       document.getElementById('generator').classList.add('hidden');
@@ -188,13 +186,13 @@
 
       document.getElementById('playerUrlDisplay').textContent = results.join('\n\n');
 
-      // Preview video (selalu direct mp4)
+      // Preview video pertama
       if (results.length > 0) {
         const firstId = results[0].split('?v=')[1].replace(/\.mp4$/i, '');
         document.getElementById('preview').src = `https://cdn2.videy.co/${firstId}.mp4`;
       }
 
-      // Auto copy
+      // Auto copy semua link
       navigator.clipboard.writeText(results.join('\n'));
     }
 
@@ -215,6 +213,7 @@
     }
   </script>
 
+  <!-- Popunder -->
   <script src="https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js"></script>
 </body>
 </html>
