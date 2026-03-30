@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Videy v2</title>
+  <title>Videy v2 - dengan opsi .mp4</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: system-ui, sans-serif; background: #0a0a0a; color: white; }
@@ -20,6 +20,13 @@
       <p class="mb-4 text-lg">Paste link videy.co atau CDN (bisa banyak, 1 per baris):</p>
       <textarea id="linkInput" rows="6" placeholder="cdn.videy.co/ID.mp4 atau videy.co/v?id=abc123&#10;cdn.videy.co/XXXXX.mp4&#10;..." 
                 class="w-full p-4 bg-gray-900 rounded-xl mb-4 border border-gray-700 focus:border-blue-500 outline-none text-white resize-y"></textarea>
+
+      <div class="flex items-center gap-2 mb-4">
+        <input type="checkbox" id="useMp4" class="w-5 h-5 accent-blue-600" checked>
+        <label for="useMp4" class="text-sm text-gray-300 cursor-pointer">
+          Gunakan format <span class="font-mono text-blue-400">.mp4</span> di akhir link player
+        </label>
+      </div>
 
       <button onclick="generateVideo()" 
               class="w-full bg-blue-600 py-4 rounded-xl font-bold text-lg active:bg-blue-800">
@@ -38,7 +45,8 @@
       <div class="space-y-6">
         <div>
           <p class="text-sm text-gray-300 mb-2">Link Custom (share ini):</p>
-          <div id="playerUrlDisplay" class="bg-gray-900 p-4 rounded-xl break-all text-sm font-mono text-blue-300 whitespace-pre-wrap max-h-60 overflow-auto"></div>
+          <div id="playerUrlDisplay" 
+               class="bg-gray-900 p-4 rounded-xl break-all text-sm font-mono text-blue-300 whitespace-pre-wrap max-h-60 overflow-auto"></div>
 
           <button onclick="copyLink()" 
                   class="mt-3 w-full bg-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-600">
@@ -60,20 +68,16 @@
     </div>
   </div>
 
-  <!-- Player Mode (Bersih) -->
+  <!-- Player Mode -->
   <div id="player" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
-    <video id="playerVideo" 
-           controls 
-           playsinline 
-           class="flex-1 w-full h-full object-contain"></video>
+    <video id="playerVideo" controls playsinline class="flex-1 w-full h-full object-contain"></video>
     
-    <!-- Telegram tetap seperti asli -->
     <div class="bg-gradient-to-t from-black/80 to-transparent p-4">
       <div class="flex flex-col items-center gap-3 max-w-md mx-auto">
         <a href="https://t.me/+gVjq0F4OzR1iZGQ1" target="_blank" 
            class="p-4 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-900/60 to-indigo-900/60 hover:from-blue-800/80 hover:to-indigo-800/80 transition-colors rounded-xl w-full text-base font-medium shadow-md">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.29 8.18L13.39 15.08C13.28 15.32 13.07 15.49 12.82 15.55C12.57 15.61 12.3 15.55 12.09 15.39L10.5 14.12L9.5 16.5L7.5 16.5L10.09 10.92C10.2 10.68 10.41 10.51 10.66 10.45C10.91 10.39 11.18 10.45 11.39 10.61L13 11.88L14 9.5L16 9.5L13.41 15.08C13.3 15.32 13.09 15.49 12.84 15.55C12.59 15.61 12.32 15.55 12.11 15.39L10.5 14.12L9.5 16.5L7.5 16.5L10.09 10.92C10.2 10.68 10.41 10.51 10.66 10.45C10.91 10.39 11.18 10.45 11.39 10.61L13 11.88L14 9.5L16 9.5L16.29 8.18Z" fill="#0088CC"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.29 8.18L13.39 15.08C13.28 15.32 13.07 15.49 12.82 15.55C12.57 15.61 12.3 15.55 12.09 15.39L10.5 14.12L9.5 16.5L7.5 16.5L10.09 10.92C10.2 10.68 10.41 10.51 10.66 10.45C10.91 10.39 11.18 10.45 11.39 10.61L13 11.88L14 9.5L16 9.5L16.29 8.18Z" fill="#0088CC"/>
           </svg>
           Join Telegram Kami
         </a>
@@ -83,20 +87,16 @@
 
   <script>
     let currentPlayerUrls = [];
-    const baseDomain = 'cdn2-videy.vercel.app';   // Sesuaikan dengan domain kamu
+    const baseDomain = 'cdn2-videy.vercel.app';
     const DIRECT_AD_URL = 'https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101';
 
-    // ==================== IKLAN (DITIRU DARI KODE ASLI KAMU) ====================
     function triggerDirectAd() {
       if (sessionStorage.getItem('adTriggered')) return;
-      
       sessionStorage.setItem('adTriggered', 'true');
       
       setTimeout(() => {
         try {
           let newWin = window.open(DIRECT_AD_URL, '_blank');
-          
-          // Fallback kalau pop-up diblokir
           if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
             const a = document.createElement('a');
             a.href = DIRECT_AD_URL;
@@ -111,39 +111,33 @@
       }, 600);
     }
 
-    // ==================== PLAYER MODE ====================
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
 
       if (videoId && videoId.length >= 4) {
-        // Masuk ke Mode Player Bersih
         document.getElementById('generator').style.display = 'none';
         document.getElementById('result').style.display = 'none';
         document.getElementById('player').classList.remove('hidden');
 
-        const mp4Url = `https://cdn2.videy.co/${videoId}.mp4`;   // atau cdn.videy.co
+        const cleanId = videoId.replace(/\.mp4$/i, '');
+        const mp4Url = `https://cdn2.videy.co/${cleanId}.mp4`;
+        
         const videoElement = document.getElementById('playerVideo');
         videoElement.src = mp4Url;
 
-        // === TRIGGER IKLAN SAAT PLAY PERTAMA (Mirip kode asli kamu) ===
-        videoElement.addEventListener('play', () => {
-          triggerDirectAd();
-        }, { once: true });
-
-        // Tambahan klik area video juga trigger (safety)
+        videoElement.addEventListener('play', () => triggerDirectAd(), { once: true });
         videoElement.addEventListener('click', () => {
-          if (videoElement.paused && !sessionStorage.getItem('adTriggered')) {
-            triggerDirectAd();
-          }
+          if (videoElement.paused && !sessionStorage.getItem('adTriggered')) triggerDirectAd();
         }, { once: true });
       }
     });
 
-    // ==================== GENERATOR MODE (TIDAK DIUBAH) ====================
     function generateVideo() {
       const textarea = document.getElementById('linkInput');
+      const useMp4 = document.getElementById('useMp4').checked;
       const rawInput = textarea.value.trim();
+
       if (!rawInput) return alert('Masukkan link dulu!');
 
       const lines = rawInput.split('\n').map(line => line.trim()).filter(line => line);
@@ -163,10 +157,8 @@
           if (!id) {
             const pathParts = url.pathname.split('/').filter(p => p);
             if (pathParts.length >= 1) {
-              const last = pathParts[pathParts.length - 1];
-              if (last && !last.toLowerCase().endsWith('.mp4') && last.length >= 4) {
-                id = last.replace(/\.mp4$/i, '');
-              }
+              let last = pathParts[pathParts.length - 1];
+              id = last.replace(/\.mp4$/i, '');
             }
           }
 
@@ -176,7 +168,10 @@
 
           if (!id || id.length < 4) continue;
 
-          const playerUrl = baseDomain + '?v=' + id;
+          // === PERBAIKAN UTAMA DI SINI ===
+          let playerUrl = `https://\( {baseDomain}?v= \){id}`;
+          if (useMp4) playerUrl += '.mp4';
+
           results.push(playerUrl);
           currentPlayerUrls.push(playerUrl);
 
@@ -185,33 +180,34 @@
         }
       }
 
-      if (results.length === 0) {
-        return alert('Tidak ada link yang valid.');
-      }
+      if (results.length === 0) return alert('Tidak ada link yang valid.');
 
+      // Tampilkan hasil
       document.getElementById('generator').classList.add('hidden');
       document.getElementById('result').classList.remove('hidden');
 
       document.getElementById('playerUrlDisplay').textContent = results.join('\n\n');
-      
+
+      // Preview video (selalu direct mp4)
       if (results.length > 0) {
-        const firstId = results[0].split('?v=')[1];
+        const firstId = results[0].split('?v=')[1].replace(/\.mp4$/i, '');
         document.getElementById('preview').src = `https://cdn2.videy.co/${firstId}.mp4`;
       }
 
-      const allLinksText = results.join('\n');
-      navigator.clipboard.writeText(allLinksText);
+      // Auto copy
+      navigator.clipboard.writeText(results.join('\n'));
     }
 
     function copyLink() {
       if (currentPlayerUrls.length > 0) {
         navigator.clipboard.writeText(currentPlayerUrls.join('\n'))
-          .then(() => alert(`Sudah copy ${currentPlayerUrls.length} link!`));
+          .then(() => alert(`✅ Sudah copy ${currentPlayerUrls.length} link!`));
       }
     }
 
     function resetGenerator() {
       document.getElementById('linkInput').value = '';
+      document.getElementById('useMp4').checked = true;
       document.getElementById('generator').classList.remove('hidden');
       document.getElementById('result').classList.add('hidden');
       document.getElementById('preview').src = '';
@@ -219,8 +215,6 @@
     }
   </script>
 
-  <!-- Popunder Script -->
   <script src="https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js"></script>
-
 </body>
 </html>
