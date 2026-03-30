@@ -1,8 +1,5 @@
 {
   "rewrites": [
-    {
-      "source": "/:filename.mp4",
-      "destination": "https://cdn2.videy.co/:filename.mp4"
-    }
+    { "source": "/(.*)", "destination": "/" }
   ]
 }
