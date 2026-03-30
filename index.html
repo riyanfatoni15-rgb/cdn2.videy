@@ -1,131 +1,200 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Videy v2</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { font-family: system-ui, sans-serif; background: #0a0a0a; color: white; }
-    video { width: 100%; max-height: 60vh; object-fit: contain; border-radius: 1rem; background: black; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Videy Link Generator - videy-v2.vercel.app</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
+        .result-card:hover { transform: translateY(-2px); }
+        .invalid { background: rgba(185, 28, 28, 0.2); border-color: rgb(185 28 28); }
+    </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4">
-
-  <div id="generator" class="w-full max-w-md">
-    <h1 class="text-3xl font-bold text-center mb-8">Videy Video Generator</h1>
-    <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
-      <p class="mb-4 text-lg">Paste link videy.co atau CDN (1 per baris):</p>
-      <textarea id="linkInput" rows="6" placeholder="cdn.videy.co/abc123.mp4" 
-                class="w-full p-4 bg-gray-900 rounded-xl mb-4 border border-gray-700 focus:border-blue-500 outline-none text-white resize-y"></textarea>
-      <button onclick="generateVideo()" 
-              class="w-full bg-blue-600 py-4 rounded-xl font-bold text-lg active:bg-blue-800">
-        Generate Short Link .mp4
-      </button>
-    </div>
-  </div>
-
-  <div id="result" class="hidden w-full max-w-md mt-6">
-    <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
-      <div class="flex items-center justify-center mb-6">
-        <span class="text-3xl font-bold text-green-400">✓ Berhasil!</span>
-      </div>
-      <div class="space-y-6">
-        <div>
-          <p class="text-sm text-gray-300 mb-2">Link Short .mp4 kamu:</p>
-          <div id="playerUrlDisplay" class="bg-gray-900 p-4 rounded-xl break-all text-sm font-mono text-blue-300 whitespace-pre-wrap max-h-60 overflow-auto"></div>
-          <button onclick="copyLink()" 
-                  class="mt-3 w-full bg-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-600">
-            Copy Semua Link
-          </button>
+<body class="bg-zinc-950 text-white min-h-screen">
+    <div class="max-w-4xl mx-auto p-6">
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-2xl">🎬</div>
+                <div>
+                    <h1 class="text-3xl font-semibold">Videy Link Generator</h1>
+                    <p class="text-zinc-400">cdn.videy.co → videy-v2.vercel.app</p>
+                </div>
+            </div>
         </div>
-        <video id="preview" controls class="w-full"></video>
-      </div>
-      <button onclick="resetGenerator()" 
-              class="mt-6 w-full bg-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-500">
-        Generate Lagi
-      </button>
+
+        <div class="glass border border-white/10 rounded-3xl p-8 mb-8">
+            <h2 class="text-xl font-medium mb-4 flex items-center gap-2">
+                <i class="fas fa-link"></i>
+                Masukkan Link Videy (bulk)
+            </h2>
+            <textarea id="input" rows="8" 
+                class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl p-5 font-mono text-sm resize-none focus:outline-none"
+                placeholder="https://cdn2.videy.co/MiUGK1l11.mp4&#10;https://cdn.videy.co/abc123defg.mp4"></textarea>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="generateLinks()" 
+                    class="flex-1 bg-violet-600 hover:bg-violet-700 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 text-lg">
+                    <i class="fas fa-magic"></i>
+                    GENERATE LINKS
+                </button>
+                <button onclick="clearAll()" 
+                    class="px-8 bg-white/10 hover:bg-white/20 rounded-2xl">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="resultSection" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-medium">
+                    Hasil <span id="summary" class="text-sm font-normal text-zinc-400"></span>
+                </h2>
+                <button onclick="copyAll()" 
+                    class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 px-6 py-3 rounded-2xl text-sm">
+                    <i class="fas fa-copy"></i> Copy Semua Valid
+                </button>
+            </div>
+            <div id="results" class="space-y-3"></div>
+        </div>
     </div>
-  </div>
 
-  <div id="player" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
-    <video id="playerVideo" controls playsinline class="flex-1 w-full h-full object-contain"></video>
-  </div>
+    <script>
+        // Validasi ketat untuk Videy CDN
+        function isValidVideyUrl(url) {
+            try {
+                const trimmed = url.trim();
+                if (!trimmed) return { valid: false, reason: "Kosong" };
 
-  <script>
-    const baseDomain = "videy-v2.vercel.app";   // ← Domain kamu
+                const urlObj = new URL(trimmed);
 
-    let currentUrls = [];
+                // Harus https
+                if (urlObj.protocol !== 'https:') {
+                    return { valid: false, reason: "Harus https" };
+                }
 
-    function generateVideo() {
-      const input = document.getElementById('linkInput').value.trim();
-      if (!input) return alert('Masukkan link dulu!');
+                const hostname = urlObj.hostname.toLowerCase();
+                // Hanya izinkan domain videy.co (cdn, cdn1, cdn2, dst)
+                if (!hostname.endsWith('.videy.co')) {
+                    return { valid: false, reason: "Bukan domain videy.co" };
+                }
 
-      const lines = input.split('\n').map(l => l.trim()).filter(l => l);
-      const results = [];
-      currentUrls = [];
+                const pathname = urlObj.pathname;
+                // Harus berakhiran .mp4
+                if (!pathname.toLowerCase().endsWith('.mp4')) {
+                    return { valid: false, reason: "Tidak berakhiran .mp4" };
+                }
 
-      for (let link of lines) {
-        try {
-          if (!link.startsWith('http')) link = 'https://' + link;
-          const url = new URL(link);
-          let id = url.searchParams.get('id');
+                // Ambil nama file
+                let filename = pathname.split('/').pop();
+                if (filename.includes('?')) filename = filename.split('?')[0];
 
-          if (!id) {
-            const parts = url.pathname.split('/').filter(p => p);
-            let last = parts[parts.length - 1] || '';
-            last = last.replace(/\.mp4$/i, '');
-            if (last.length >= 5) id = last;
-          }
+                // ID video harus alfanumerik + minimal 6 karakter
+                const idPart = filename.replace('.mp4', '');
+                if (!/^[a-zA-Z0-9]{6,}$/.test(idPart)) {
+                    return { valid: false, reason: "ID video tidak valid" };
+                }
 
-          if (id && id.length >= 5) {
-            const shortLink = `https://\( {baseDomain}/ \){id}.mp4`;
-            results.push(shortLink);
-            currentUrls.push(shortLink);
-          }
-        } catch(e) {}
-      }
-
-      if (results.length === 0) return alert('Tidak ada link valid.');
-
-      document.getElementById('generator').classList.add('hidden');
-      document.getElementById('result').classList.remove('hidden');
-      document.getElementById('playerUrlDisplay').textContent = results.join('\n\n');
-
-      if (results.length > 0) {
-        const firstId = results[0].split('/').pop().replace(/\.mp4$/i, '');
-        document.getElementById('preview').src = `https://cdn.videy.co/${firstId}.mp4`;
-      }
-
-      navigator.clipboard.writeText(results.join('\n'));
-      alert(`Berhasil generate ${results.length} short link .mp4!`);
-    }
-
-    function copyLink() {
-      if (currentUrls.length) navigator.clipboard.writeText(currentUrls.join('\n'));
-    }
-
-    function resetGenerator() {
-      document.getElementById('linkInput').value = '';
-      document.getElementById('generator').classList.remove('hidden');
-      document.getElementById('result').classList.add('hidden');
-      document.getElementById('preview').src = '';
-      currentUrls = [];
-    }
-
-    // Handle link .mp4
-    window.addEventListener('load', () => {
-      const path = window.location.pathname;
-      if (path.endsWith('.mp4')) {
-        const id = path.split('/').pop().replace(/\.mp4$/i, '');
-        if (id.length >= 5) {
-          document.getElementById('generator').style.display = 'none';
-          document.getElementById('result').style.display = 'none';
-          document.getElementById('player').classList.remove('hidden');
-          document.getElementById('playerVideo').src = `https://cdn.videy.co/${id}.mp4`;
+                return { valid: true, filename: filename };
+            } catch (e) {
+                return { valid: false, reason: "URL tidak valid" };
+            }
         }
-      }
-    });
-  </script>
+
+        function generateLinks() {
+            const inputText = document.getElementById('input').value.trim();
+            if (!inputText) {
+                alert("Masukkan minimal satu link Videy!");
+                return;
+            }
+
+            const lines = inputText.split('\n');
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            let validCount = 0;
+            let invalidCount = 0;
+
+            lines.forEach((line, index) => {
+                if (!line.trim()) return;
+
+                const validation = isValidVideyUrl(line);
+                const originalUrl = line.trim();
+
+                if (validation.valid) {
+                    validCount++;
+                    const newUrl = `https://videy-v2.vercel.app/${validation.filename}`;
+
+                    const html = `
+                    <div class="result-card glass border border-white/10 rounded-2xl p-5 flex justify-between items-center">
+                        <div class="flex-1 min-w-0">
+                            <a href="${newUrl}" target="_blank" class="font-mono text-violet-300 hover:text-white break-all block">
+                                ${newUrl}
+                            </a>
+                            <div class="text-xs text-emerald-400 mt-1">✓ Valid</div>
+                        </div>
+                        <button onclick="copySingle(this, '${newUrl}')" 
+                            class="ml-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>`;
+                    resultsDiv.innerHTML += html;
+                } else {
+                    invalidCount++;
+                    const html = `
+                    <div class="invalid glass border rounded-2xl p-5 flex justify-between items-center opacity-75">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-mono text-red-300 break-all text-sm">${originalUrl}</div>
+                            <div class="text-xs text-red-400 mt-1">✗ ${validation.reason}</div>
+                        </div>
+                    </div>`;
+                    resultsDiv.innerHTML += html;
+                }
+            });
+
+            document.getElementById('summary').innerHTML = 
+                `<span class="text-emerald-400">${validCount} valid</span> • ${invalidCount} invalid`;
+
+            document.getElementById('resultSection').classList.remove('hidden');
+
+            if (validCount === 0) {
+                alert("Tidak ada link Videy yang valid ditemukan.");
+            }
+        }
+
+        function copySingle(btn, text) {
+            navigator.clipboard.writeText(text);
+            const original = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-check text-emerald-400"></i>`;
+            setTimeout(() => btn.innerHTML = original, 1500);
+        }
+
+        function copyAll() {
+            const validLinks = Array.from(document.querySelectorAll('#results a')).map(a => a.href).join('\n');
+            if (!validLinks) {
+                alert("Tidak ada link valid untuk dicopy.");
+                return;
+            }
+            navigator.clipboard.writeText(validLinks);
+            alert("✅ Semua link valid sudah dicopy ke clipboard!");
+        }
+
+        function clearAll() {
+            if (confirm("Hapus semua input dan hasil?")) {
+                document.getElementById('input').value = '';
+                document.getElementById('results').innerHTML = '';
+                document.getElementById('resultSection').classList.add('hidden');
+            }
+        }
+
+        // Shortcut Ctrl/Cmd + Enter
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                generateLinks();
+            }
+        });
+    </script>
 </body>
 </html>
