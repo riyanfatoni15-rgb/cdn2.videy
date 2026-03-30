@@ -17,7 +17,6 @@
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
     <div class="max-w-4xl mx-auto p-6">
-        <!-- Header sama -->
         <div class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-2xl">🎬</div>
@@ -28,7 +27,6 @@
             </div>
         </div>
 
-        <!-- Input sama -->
         <div class="glass border border-white/10 rounded-3xl p-8 mb-8">
             <h2 class="text-xl font-medium mb-4 flex items-center gap-2">
                 <i class="fas fa-link"></i> Masukkan Link Videy (bulk)
@@ -46,7 +44,6 @@
             </div>
         </div>
 
-        <!-- Hasil -->
         <div id="resultSection" class="hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-medium">Hasil <span id="summary" class="text-sm font-normal text-zinc-400"></span></h2>
@@ -57,7 +54,6 @@
             <div id="results" class="space-y-3"></div>
         </div>
 
-        <!-- Video Player -->
         <div id="videoContainer" class="hidden glass border border-white/10 rounded-3xl p-4">
             <h3 class="text-lg font-medium mb-3 flex items-center gap-2">
                 <i class="fas fa-play-circle"></i> Video Player
@@ -68,22 +64,24 @@
     </div>
 
     <script>
-        let adShown = false;          // direct link
-        let popunderReady = false;    // popunder script sudah dimuat
+        let directAdShown = false;
+        let popunderLoaded = false;
         let video = null;
         let firstPlay = true;
 
-        // === DIRECT LINK IKLAN (klik play pertama) ===
+        // Direct Link Iklan
         function showDirectAd() {
-            if (adShown) return;
-            adShown = true;
-            window.open('https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101', '_blank');
+            if (directAdShown) return;
+            directAdShown = true;
+            try {
+                window.open('https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101', '_blank');
+            } catch(e) {}
         }
 
-        // === LOAD POPUNDER ===
+        // Load Popunder Script
         function loadPopunder() {
-            if (popunderReady) return;
-            popunderReady = true;
+            if (popunderLoaded) return;
+            popunderLoaded = true;
             const script = document.createElement('script');
             script.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
             document.head.appendChild(script);
@@ -102,23 +100,24 @@
 
             video.onloadedmetadata = () => status.textContent = '';
             video.onerror = () => {
-                status.innerHTML = `❌ Gagal memuat video.<br>
-                Coba manual: <a href="https://cdn2.videy.co/\( {filename}" target="_blank" class="text-violet-400">https://cdn2.videy.co/ \){filename}</a>`;
+                status.innerHTML = `Gagal memuat video.<br>Coba manual: <a href="https://cdn2.videy.co/\( {filename}" target="_blank" class="text-violet-400">https://cdn2.videy.co/ \){filename}</a>`;
             };
 
-            // === IKLAN SAAT PLAY PERTAMA ===
-            video.addEventListener('play', () => {
+            // === TRIGGER IKLAN SAAT PLAY PERTAMA ===
+            const playHandler = () => {
                 if (firstPlay) {
                     firstPlay = false;
-                    showDirectAd();                    // Direct link muncul
+                    showDirectAd();           // Direct link
                     setTimeout(() => {
-                        loadPopunder();                // Siapkan popunder
-                    }, 1200);
+                        loadPopunder();       // Load popunder script
+                    }, 1500);
                 }
-            }, { once: true });
+            };
+
+            video.addEventListener('play', playHandler, { once: true });
         }
 
-        // Fungsi generateLinks, isValidVideyUrl, copy, clearAll sama seperti kode sebelumnya yang sudah berhasil
+        // Fungsi generateLinks (sama seperti sebelumnya yang sudah berhasil)
         function isValidVideyUrl(url) {
             try {
                 let trimmed = url.trim();
@@ -193,9 +192,9 @@
             }
         }
 
-        // Klik sembarang di halaman untuk memastikan popunder siap
+        // Klik di mana saja setelah direct ad untuk mempersiapkan popunder
         document.addEventListener('click', () => {
-            if (adShown && !popunderReady) loadPopunder();
+            if (directAdShown) loadPopunder();
         });
 
         document.addEventListener('keydown', e => {
