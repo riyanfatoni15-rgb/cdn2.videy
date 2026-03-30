@@ -3,26 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Videy Link Generator</title>
+    <title>Videy Player</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
-        #videoContainer {
-            max-width: 820px;
-            margin: 30px auto;
-            background: #000;
+        body { font-family: 'Inter', system-ui, sans-serif; background: #0a0a0a; }
+        #playerContainer {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #111;
             border-radius: 16px;
             overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
         #videyPlayer { width: 100%; height: auto; display: block; }
+        .generator-mode { display: none; }
     </style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen">
+<body>
 
-    <div class="max-w-4xl mx-auto p-6">
-        <!-- Header -->
+    <!-- ==================== MODE PLAYER SAJA (Short Link) ==================== -->
+    <div id="playerMode">
+        <div id="playerContainer" class="glass border border-white/10 p-4">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h3 class="text-lg font-medium flex items-center gap-2">
+                    <i class="fas fa-play-circle text-violet-500"></i> Video Player
+                </h3>
+                <div id="status" class="text-xs text-zinc-400"></div>
+            </div>
+            <video id="videyPlayer" controls controlsList="nodownload" playsinline></video>
+        </div>
+    </div>
+
+    <!-- ==================== MODE GENERATOR (Halaman Utama) ==================== -->
+    <div id="generatorMode" class="generator-mode max-w-4xl mx-auto p-6">
         <div class="flex items-center gap-3 mb-8">
             <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-2xl">🎬</div>
             <div>
@@ -31,7 +45,6 @@
             </div>
         </div>
 
-        <!-- Input Section -->
         <div class="glass border border-white/10 rounded-3xl p-8 mb-8">
             <h2 class="text-xl font-medium mb-4 flex items-center gap-2">
                 <i class="fas fa-link"></i> Masukkan Link Videy (bulk)
@@ -49,7 +62,6 @@
             </div>
         </div>
 
-        <!-- Hasil Generate -->
         <div id="resultSection" class="hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-medium">Hasil <span id="summary" class="text-sm font-normal text-zinc-400"></span></h2>
@@ -59,15 +71,6 @@
             </div>
             <div id="results" class="space-y-3"></div>
         </div>
-
-        <!-- VIDEO PLAYER UTAMA (untuk short link & generate) -->
-        <div id="videoContainer" class="hidden glass border border-white/10 rounded-3xl p-4">
-            <h3 class="text-lg font-medium mb-3 flex items-center gap-2">
-                <i class="fas fa-play-circle"></i> Video Player
-            </h3>
-            <video id="videyPlayer" controls controlsList="nodownload" playsinline></video>
-            <div id="videoStatus" class="text-xs text-amber-400 mt-3 text-center"></div>
-        </div>
     </div>
 
     <script>
@@ -76,7 +79,6 @@
         let video = null;
         let firstPlay = true;
 
-        // === IKLAN ===
         function showDirectAd() {
             if (directAdShown) return;
             directAdShown = true;
@@ -91,19 +93,14 @@
             document.head.appendChild(script);
         }
 
-        // === PLAY VIDEO DENGAN IKLAN ===
+        // Fungsi Play Video dengan Iklan
         function playVideo(filename) {
-            const container = document.getElementById('videoContainer');
             video = document.getElementById('videyPlayer');
-            const status = document.getElementById('videoStatus');
-
-            container.classList.remove('hidden');
-            container.scrollIntoView({ behavior: 'smooth' });
+            const status = document.getElementById('status');
 
             video.src = `https://cdn2.videy.co/${filename}`;
             status.textContent = 'Memuat video...';
 
-            // Trigger iklan saat pertama kali play
             video.addEventListener('play', () => {
                 if (firstPlay) {
                     firstPlay = false;
@@ -113,23 +110,26 @@
             }, { once: true });
 
             video.onerror = () => {
-                status.innerHTML = `Gagal memuat.<br><a href="https://cdn2.videy.co/${filename}" target="_blank" class="text-violet-400">Coba buka manual</a>`;
+                status.textContent = 'Gagal memuat video';
             };
         }
 
-        // === CEK APAKAH INI SHORT LINK LANGSUNG ===
-        function checkIfShortLink() {
+        // Deteksi apakah ini short link langsung
+        function checkDirectLink() {
             const path = window.location.pathname;
             if (path && path !== '/' && path.endsWith('.mp4')) {
                 const filename = path.substring(1);
-                // Langsung tampilkan player + siapkan iklan
-                setTimeout(() => {
-                    playVideo(filename);
-                }, 500);
+                document.getElementById('generatorMode').style.display = 'none';
+                document.getElementById('playerMode').style.display = 'block';
+                playVideo(filename);
+            } else {
+                // Mode Generator
+                document.getElementById('generatorMode').style.display = 'block';
+                document.getElementById('playerMode').style.display = 'none';
             }
         }
 
-        // === Generate Links ===
+        // Generate Links (mode generator)
         function isValidVideyUrl(url) {
             try {
                 let trimmed = url.trim();
@@ -196,17 +196,11 @@
         }
 
         function clearAll() {
-            if (confirm("Hapus semua?")) location.reload();
+            location.reload();
         }
 
-        // Init
-        window.onload = () => {
-            checkIfShortLink();
-        };
-
-        document.addEventListener('keydown', e => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateLinks();
-        });
+        // Jalankan saat halaman load
+        window.onload = checkDirectLink;
     </script>
 </body>
 </html>
