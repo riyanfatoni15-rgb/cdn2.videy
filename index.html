@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Videy Link Generator - videy-v2.vercel.app</title>
+    <title>Videy Link Generator - cdn2-videy.vercel.app</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -12,7 +12,6 @@
         .result-card:hover { transform: translateY(-2px); }
         .invalid { background: rgba(185, 28, 28, 0.25); border-color: #991b1b; }
         
-        /* Video player container */
         #videoContainer {
             position: relative;
             width: 100%;
@@ -31,18 +30,16 @@
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
     <div class="max-w-4xl mx-auto p-6">
-        <!-- Header tetap sama -->
         <div class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-2xl">🎬</div>
                 <div>
                     <h1 class="text-3xl font-semibold">Videy Link Generator</h1>
-                    <p class="text-zinc-400">cdn.videy.co → videy-v2.vercel.app</p>
+                    <p class="text-zinc-400">cdn.videy.co → cdn2-videy.vercel.app</p>
                 </div>
             </div>
         </div>
 
-        <!-- Input section tetap sama -->
         <div class="glass border border-white/10 rounded-3xl p-8 mb-8">
             <h2 class="text-xl font-medium mb-4 flex items-center gap-2">
                 <i class="fas fa-link"></i>
@@ -65,7 +62,6 @@
             </div>
         </div>
 
-        <!-- Hasil tetap sama -->
         <div id="resultSection" class="hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-medium">
@@ -79,7 +75,7 @@
             <div id="results" class="space-y-3"></div>
         </div>
 
-        <!-- Video Player Section (baru) -->
+        <!-- Video Player -->
         <div id="videoContainer" class="hidden glass border border-white/10 rounded-3xl p-4">
             <h3 class="text-lg font-medium mb-3 flex items-center gap-2">
                 <i class="fas fa-play-circle"></i> Video Player
@@ -91,66 +87,53 @@
     </div>
 
     <script>
-        // === IKLAN & POPUNDER LOGIC ===
-        let adShown = false;           // direct link sudah ditampilkan?
-        let hasInteracted = false;     // user sudah klik sembarang setelah play pertama?
+        // === IKLAN & POPUNDER ===
+        let adShown = false;
+        let hasInteracted = false;
 
-        // Direct link iklan (klik pertama play)
         function showDirectAd() {
             if (adShown) return;
             adShown = true;
             window.open('https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101', '_blank');
         }
 
-        // Popunder script
         function loadPopunder() {
             const script = document.createElement('script');
             script.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
             document.head.appendChild(script);
         }
 
-        // Deteksi klik sembarang di halaman (setelah play pertama)
         function enablePopunderOnInteraction() {
             if (hasInteracted) return;
             hasInteracted = true;
             loadPopunder();
         }
 
-        // === VIDEO PLAYER HANDLER ===
+        // === VIDEO PLAYER ===
         let video = null;
         let firstPlay = true;
 
-        function playVideyVideo(url) {
+        function playVideyVideo(shortLink) {
             const container = document.getElementById('videoContainer');
             video = document.getElementById('videyPlayer');
             
-            video.src = url;
+            // Gunakan full URL untuk memutar video
+            const fullUrl = 'https://' + shortLink;
+            video.src = fullUrl;
             container.classList.remove('hidden');
             container.scrollIntoView({ behavior: 'smooth' });
 
-            // Event listeners video
             video.addEventListener('play', () => {
                 if (firstPlay) {
                     firstPlay = false;
-                    showDirectAd();                    // Klik pertama → direct link
+                    showDirectAd();
                     setTimeout(() => {
-                        enablePopunderOnInteraction(); // Siapkan popunder
+                        enablePopunderOnInteraction();
                     }, 800);
                 }
-            });
-
-            // Saat user close tab / browser (popunder muncul)
-            window.addEventListener('beforeunload', (e) => {
-                if (hasInteracted && video && !video.paused) {
-                    // Trigger popunder saat close
-                    try {
-                        window.open('about:blank', '_blank'); // helper untuk popunder
-                    } catch(e) {}
-                }
-            });
+            }, { once: true });
         }
 
-        // Fungsi generateLinks yang sudah ada (ditambah opsi play video)
         function generateLinks() {
             const inputText = document.getElementById('input').value.trim();
             if (!inputText) {
@@ -173,18 +156,19 @@
 
                 if (validation.valid) {
                     validCount++;
-                    const newUrl = `https://videy-v2.vercel.app/${validation.filename}`;
+                    const filename = validation.filename;
+                    const shortLink = `cdn2-videy.vercel.app/${filename}`;
 
                     const html = `
                     <div class="result-card glass border border-white/10 rounded-2xl p-5 flex justify-between items-center">
                         <div class="flex-1 min-w-0">
-                            <a href="\( {newUrl}" target="_blank" onclick="playVideyVideo(' \){newUrl}'); return false;" 
+                            <a href="#" onclick="playVideyVideo('${shortLink}'); return false;" 
                                class="font-mono text-violet-300 hover:text-white break-all block">
-                                ${newUrl}
+                                ${shortLink}
                             </a>
                             <div class="text-xs text-emerald-400 mt-1">✓ Valid • Klik untuk putar</div>
                         </div>
-                        <button onclick="copySingle(this, '${newUrl}')" 
+                        <button onclick="copySingle(this, '${shortLink}')" 
                             class="ml-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">
                             <i class="fas fa-copy"></i>
                         </button>
@@ -207,11 +191,10 @@
             document.getElementById('resultSection').classList.remove('hidden');
 
             if (validCount === 0 && invalidCount > 0) {
-                alert("Semua link yang dimasukkan tidak valid. Cek contoh di placeholder.");
+                alert("Semua link yang dimasukkan tidak valid.");
             }
         }
 
-        // Fungsi lain tetap sama (copySingle, copyAll, clearAll, isValidVideyUrl, dll)
         function isValidVideyUrl(url) {
             try {
                 let trimmed = url.trim();
@@ -257,7 +240,7 @@
         }
 
         function copyAll() {
-            const validLinks = Array.from(document.querySelectorAll('#results a')).map(a => a.href).join('\n');
+            const validLinks = Array.from(document.querySelectorAll('#results a')).map(a => a.textContent.trim()).join('\n');
             if (validLinks) {
                 navigator.clipboard.writeText(validLinks);
                 alert("✅ Semua link valid sudah dicopy!");
@@ -276,17 +259,13 @@
             }
         }
 
-        // Ctrl + Enter
         document.addEventListener('keydown', e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateLinks();
         });
 
-        // Klik sembarang di body untuk memicu interaksi popunder
         document.addEventListener('click', () => {
-            if (adShown) {
-                enablePopunderOnInteraction();
-            }
-        }, { once: false });
+            if (adShown) enablePopunderOnInteraction();
+        });
     </script>
 </body>
 </html>
