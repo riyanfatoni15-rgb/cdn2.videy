@@ -15,8 +15,8 @@
         #videoContainer {
             position: relative;
             width: 100%;
-            max-width: 800px;
-            margin: 20px auto;
+            max-width: 820px;
+            margin: 25px auto;
             border-radius: 16px;
             overflow: hidden;
             background: #000;
@@ -81,13 +81,13 @@
                 <i class="fas fa-play-circle"></i> Video Player
             </h3>
             <video id="videyPlayer" controls controlsList="nodownload" playsinline>
-                Your browser does not support the video tag.
+                Browser Anda tidak mendukung pemutar video.
             </video>
         </div>
     </div>
 
     <script>
-        // === IKLAN & POPUNDER ===
+        // === IKLAN & POPUNDER (tetap sama) ===
         let adShown = false;
         let hasInteracted = false;
 
@@ -109,17 +109,19 @@
             loadPopunder();
         }
 
-        // === VIDEO PLAYER ===
+        // === VIDEO PLAYER - PAKAI ORIGINAL CDN UNTUK PLAY ===
         let video = null;
         let firstPlay = true;
 
-        function playVideyVideo(shortLink) {
+        function playVideyVideo(shortLink, originalFilename) {
             const container = document.getElementById('videoContainer');
             video = document.getElementById('videyPlayer');
             
-            // Gunakan full URL untuk memutar video
-            const fullUrl = 'https://' + shortLink;
-            video.src = fullUrl;
+            // Gunakan original Videy CDN agar video bisa diputar
+            const playUrl = `https://cdn.videy.co/${originalFilename}`;
+            // Alternatif: coba juga https://cdn2.videy.co/${originalFilename} kalau yang atas tidak jalan
+            
+            video.src = playUrl;
             container.classList.remove('hidden');
             container.scrollIntoView({ behavior: 'smooth' });
 
@@ -127,9 +129,7 @@
                 if (firstPlay) {
                     firstPlay = false;
                     showDirectAd();
-                    setTimeout(() => {
-                        enablePopunderOnInteraction();
-                    }, 800);
+                    setTimeout(enablePopunderOnInteraction, 800);
                 }
             }, { once: true });
         }
@@ -162,7 +162,7 @@
                     const html = `
                     <div class="result-card glass border border-white/10 rounded-2xl p-5 flex justify-between items-center">
                         <div class="flex-1 min-w-0">
-                            <a href="#" onclick="playVideyVideo('${shortLink}'); return false;" 
+                            <a href="#" onclick="playVideyVideo('\( {shortLink}', ' \){filename}'); return false;" 
                                class="font-mono text-violet-300 hover:text-white break-all block">
                                 ${shortLink}
                             </a>
@@ -189,10 +189,6 @@
                 `<span class="text-emerald-400">${validCount} valid</span> • ${invalidCount} invalid`;
 
             document.getElementById('resultSection').classList.remove('hidden');
-
-            if (validCount === 0 && invalidCount > 0) {
-                alert("Semua link yang dimasukkan tidak valid.");
-            }
         }
 
         function isValidVideyUrl(url) {
@@ -200,9 +196,7 @@
                 let trimmed = url.trim();
                 if (!trimmed) return { valid: false, reason: "Link kosong" };
 
-                if (!trimmed.startsWith('http')) {
-                    trimmed = 'https://' + trimmed;
-                }
+                if (!trimmed.startsWith('http')) trimmed = 'https://' + trimmed;
 
                 const urlObj = new URL(trimmed);
                 const hostname = urlObj.hostname.toLowerCase();
@@ -244,8 +238,6 @@
             if (validLinks) {
                 navigator.clipboard.writeText(validLinks);
                 alert("✅ Semua link valid sudah dicopy!");
-            } else {
-                alert("Tidak ada link valid untuk dicopy.");
             }
         }
 
