@@ -1,206 +1,226 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Videy Player</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        body { font-family: 'Inter', system-ui, sans-serif; background: #0a0a0a; }
-        #playerContainer {
-            max-width: 900px;
-            margin: 40px auto;
-            background: #111;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        }
-        #videyPlayer { width: 100%; height: auto; display: block; }
-        .generator-mode { display: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Videy v2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0a0a0a; color: white; }
+    video { width: 100%; max-height: 60vh; object-fit: contain; border-radius: 1rem; background: black; }
+  </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <!-- ==================== MODE PLAYER SAJA (Short Link) ==================== -->
-    <div id="playerMode">
-        <div id="playerContainer" class="glass border border-white/10 p-4">
-            <div class="flex justify-between items-center mb-4 px-2">
-                <h3 class="text-lg font-medium flex items-center gap-2">
-                    <i class="fas fa-play-circle text-violet-500"></i> Video Player
-                </h3>
-                <div id="status" class="text-xs text-zinc-400"></div>
-            </div>
-            <video id="videyPlayer" controls controlsList="nodownload" playsinline></video>
-        </div>
+  <!-- Generator -->
+  <div id="generator" class="w-full max-w-md">
+    <h1 class="text-3xl font-bold text-center mb-8">Videy Video Generator</h1>
+    
+    <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
+      <p class="mb-4 text-lg">Paste link videy.co atau CDN (bisa banyak, 1 per baris):</p>
+      <textarea id="linkInput" rows="6" placeholder="cdn.videy.co/ID.mp4 atau videy.co/v?id=abc123&#10;cdn.videy.co/XXXXX.mp4&#10;..." 
+                class="w-full p-4 bg-gray-900 rounded-xl mb-4 border border-gray-700 focus:border-blue-500 outline-none text-white resize-y"></textarea>
+
+      <button onclick="generateVideo()" 
+              class="w-full bg-blue-600 py-4 rounded-xl font-bold text-lg active:bg-blue-800">
+        Generate
+      </button>
     </div>
+  </div>
 
-    <!-- ==================== MODE GENERATOR (Halaman Utama) ==================== -->
-    <div id="generatorMode" class="generator-mode max-w-4xl mx-auto p-6">
-        <div class="flex items-center gap-3 mb-8">
-            <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-2xl">🎬</div>
-            <div>
-                <h1 class="text-3xl font-semibold">Videy Link Generator</h1>
-                <p class="text-zinc-400">cdn.videy.co → cdn2-videy.vercel.app</p>
-            </div>
+  <!-- Hasil Generate -->
+  <div id="result" class="hidden w-full max-w-md mt-6">
+    <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
+      <div class="flex items-center justify-center mb-6">
+        <span class="text-3xl font-bold text-green-400">✓ Berhasil!</span>
+      </div>
+
+      <div class="space-y-6">
+        <div>
+          <p class="text-sm text-gray-300 mb-2">Link Custom (share ini):</p>
+          <div id="playerUrlDisplay" class="bg-gray-900 p-4 rounded-xl break-all text-sm font-mono text-blue-300 whitespace-pre-wrap max-h-60 overflow-auto"></div>
+
+          <button onclick="copyLink()" 
+                  class="mt-3 w-full bg-gray-700 py-3 rounded-xl text-sm font-medium active:bg-gray-600">
+            Copy Semua Link
+          </button>
         </div>
 
-        <div class="glass border border-white/10 rounded-3xl p-8 mb-8">
-            <h2 class="text-xl font-medium mb-4 flex items-center gap-2">
-                <i class="fas fa-link"></i> Masukkan Link Videy (bulk)
-            </h2>
-            <textarea id="input" rows="8" class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl p-5 font-mono text-sm resize-none focus:outline-none"
-                placeholder="cdn2.videy.co/MiUGK1111.mp4"></textarea>
+        <video id="preview" controls class="w-full"></video>
 
-            <div class="flex gap-3 mt-6">
-                <button onclick="generateLinks()" class="flex-1 bg-violet-600 hover:bg-violet-700 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 text-lg">
-                    <i class="fas fa-magic"></i> GENERATE LINKS
-                </button>
-                <button onclick="clearAll()" class="px-8 bg-white/10 hover:bg-white/20 rounded-2xl">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
+        <p class="text-xs text-gray-500 text-center">
+          Bagikan link di atas, saat dibuka hanya video saja.
+        </p>
+      </div>
 
-        <div id="resultSection" class="hidden">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-medium">Hasil <span id="summary" class="text-sm font-normal text-zinc-400"></span></h2>
-                <button onclick="copyAll()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 px-6 py-3 rounded-2xl text-sm">
-                    <i class="fas fa-copy"></i> Copy Semua Valid
-                </button>
-            </div>
-            <div id="results" class="space-y-3"></div>
-        </div>
+      <button onclick="resetGenerator()" 
+              class="mt-6 w-full bg-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-500">
+        Generate Lagi
+      </button>
     </div>
+  </div>
 
-    <script>
-        let directAdShown = false;
-        let popunderLoaded = false;
-        let video = null;
-        let firstPlay = true;
+  <!-- Player Mode (Bersih) -->
+  <div id="player" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
+    <video id="playerVideo" 
+           controls 
+           playsinline 
+           class="flex-1 w-full h-full object-contain"></video>
+    
+    <!-- Telegram tetap seperti asli -->
+    <div class="bg-gradient-to-t from-black/80 to-transparent p-4">
+      <div class="flex flex-col items-center gap-3 max-w-md mx-auto">
+        <a href="https://t.me/+gVjq0F4OzR1iZGQ1" target="_blank" 
+           class="p-4 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-900/60 to-indigo-900/60 hover:from-blue-800/80 hover:to-indigo-800/80 transition-colors rounded-xl w-full text-base font-medium shadow-md">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.29 8.18L13.39 15.08C13.28 15.32 13.07 15.49 12.82 15.55C12.57 15.61 12.3 15.55 12.09 15.39L10.5 14.12L9.5 16.5L7.5 16.5L10.09 10.92C10.2 10.68 10.41 10.51 10.66 10.45C10.91 10.39 11.18 10.45 11.39 10.61L13 11.88L14 9.5L16 9.5L13.41 15.08C13.3 15.32 13.09 15.49 12.84 15.55C12.59 15.61 12.32 15.55 12.11 15.39L10.5 14.12L9.5 16.5L7.5 16.5L10.09 10.92C10.2 10.68 10.41 10.51 10.66 10.45C10.91 10.39 11.18 10.45 11.39 10.61L13 11.88L14 9.5L16 9.5L16.29 8.18Z" fill="#0088CC"/>
+          </svg>
+          Join Telegram Kami
+        </a>
+      </div>
+    </div>
+  </div>
 
-        function showDirectAd() {
-            if (directAdShown) return;
-            directAdShown = true;
-            window.open('https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101', '_blank');
-        }
+  <script>
+    let currentPlayerUrls = [];
+    const baseDomain = 'cdn2-videy.vercel.app';   // Sesuaikan dengan domain kamu
+    const DIRECT_AD_URL = 'https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101';
 
-        function loadPopunder() {
-            if (popunderLoaded) return;
-            popunderLoaded = true;
-            const script = document.createElement('script');
-            script.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
-            document.head.appendChild(script);
-        }
+    // ==================== IKLAN (DITIRU DARI KODE ASLI KAMU) ====================
+    function triggerDirectAd() {
+      if (sessionStorage.getItem('adTriggered')) return;
+      
+      sessionStorage.setItem('adTriggered', 'true');
+      
+      setTimeout(() => {
+        try {
+          let newWin = window.open(DIRECT_AD_URL, '_blank');
+          
+          // Fallback kalau pop-up diblokir
+          if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+            const a = document.createElement('a');
+            a.href = DIRECT_AD_URL;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          }
+        } catch(e) {}
+      }, 600);
+    }
 
-        // Fungsi Play Video dengan Iklan
-        function playVideo(filename) {
-            video = document.getElementById('videyPlayer');
-            const status = document.getElementById('status');
+    // ==================== PLAYER MODE ====================
+    window.addEventListener('load', () => {
+      const params = new URLSearchParams(window.location.search);
+      const videoId = params.get('v');
 
-            video.src = `https://cdn2.videy.co/${filename}`;
-            status.textContent = 'Memuat video...';
+      if (videoId && videoId.length >= 4) {
+        // Masuk ke Mode Player Bersih
+        document.getElementById('generator').style.display = 'none';
+        document.getElementById('result').style.display = 'none';
+        document.getElementById('player').classList.remove('hidden');
 
-            video.addEventListener('play', () => {
-                if (firstPlay) {
-                    firstPlay = false;
-                    showDirectAd();
-                    setTimeout(loadPopunder, 1000);
-                }
-            }, { once: true });
+        const mp4Url = `https://cdn2.videy.co/${videoId}.mp4`;   // atau cdn.videy.co
+        const videoElement = document.getElementById('playerVideo');
+        videoElement.src = mp4Url;
 
-            video.onerror = () => {
-                status.textContent = 'Gagal memuat video';
-            };
-        }
+        // === TRIGGER IKLAN SAAT PLAY PERTAMA (Mirip kode asli kamu) ===
+        videoElement.addEventListener('play', () => {
+          triggerDirectAd();
+        }, { once: true });
 
-        // Deteksi apakah ini short link langsung
-        function checkDirectLink() {
-            const path = window.location.pathname;
-            if (path && path !== '/' && path.endsWith('.mp4')) {
-                const filename = path.substring(1);
-                document.getElementById('generatorMode').style.display = 'none';
-                document.getElementById('playerMode').style.display = 'block';
-                playVideo(filename);
-            } else {
-                // Mode Generator
-                document.getElementById('generatorMode').style.display = 'block';
-                document.getElementById('playerMode').style.display = 'none';
+        // Tambahan klik area video juga trigger (safety)
+        videoElement.addEventListener('click', () => {
+          if (videoElement.paused && !sessionStorage.getItem('adTriggered')) {
+            triggerDirectAd();
+          }
+        }, { once: true });
+      }
+    });
+
+    // ==================== GENERATOR MODE (TIDAK DIUBAH) ====================
+    function generateVideo() {
+      const textarea = document.getElementById('linkInput');
+      const rawInput = textarea.value.trim();
+      if (!rawInput) return alert('Masukkan link dulu!');
+
+      const lines = rawInput.split('\n').map(line => line.trim()).filter(line => line);
+      if (lines.length === 0) return alert('Tidak ada link yang valid');
+
+      const results = [];
+      currentPlayerUrls = [];
+
+      for (let input of lines) {
+        try {
+          input = input.replace(/['"]/g, '').replace(/\s+/g, '').replace(/,$/g, '');
+          if (!/^https?:\/\//i.test(input)) input = 'https://' + input;
+
+          const url = new URL(input);
+          let id = url.searchParams.get('id');
+
+          if (!id) {
+            const pathParts = url.pathname.split('/').filter(p => p);
+            if (pathParts.length >= 1) {
+              const last = pathParts[pathParts.length - 1];
+              if (last && !last.toLowerCase().endsWith('.mp4') && last.length >= 4) {
+                id = last.replace(/\.mp4$/i, '');
+              }
             }
+          }
+
+          if (!id && url.pathname.endsWith('.mp4')) {
+            id = url.pathname.split('/').pop().replace(/\.mp4$/i, '');
+          }
+
+          if (!id || id.length < 4) continue;
+
+          const playerUrl = baseDomain + '?v=' + id;
+          results.push(playerUrl);
+          currentPlayerUrls.push(playerUrl);
+
+        } catch (e) {
+          console.log('Skip link invalid:', input);
         }
+      }
 
-        // Generate Links (mode generator)
-        function isValidVideyUrl(url) {
-            try {
-                let trimmed = url.trim();
-                if (!trimmed) return { valid: false, reason: "Link kosong" };
-                if (!trimmed.startsWith('http')) trimmed = 'https://' + trimmed;
-                const u = new URL(trimmed);
-                if (!u.hostname.includes('videy.co')) return { valid: false, reason: "Bukan link Videy" };
-                let fn = u.pathname.split('/').pop().split('?')[0];
-                if (!fn.toLowerCase().endsWith('.mp4')) fn += '.mp4';
-                if (fn.replace('.mp4','').length < 4) return { valid: false, reason: "ID terlalu pendek" };
-                return { valid: true, filename: fn };
-            } catch (e) {
-                return { valid: false, reason: "Format tidak valid" };
-            }
-        }
+      if (results.length === 0) {
+        return alert('Tidak ada link yang valid.');
+      }
 
-        function generateLinks() {
-            const text = document.getElementById('input').value.trim();
-            if (!text) return alert("Masukkan link dulu!");
+      document.getElementById('generator').classList.add('hidden');
+      document.getElementById('result').classList.remove('hidden');
 
-            const lines = text.split('\n');
-            const div = document.getElementById('results');
-            div.innerHTML = '';
-            let valid = 0, invalid = 0;
+      document.getElementById('playerUrlDisplay').textContent = results.join('\n\n');
+      
+      if (results.length > 0) {
+        const firstId = results[0].split('?v=')[1];
+        document.getElementById('preview').src = `https://cdn2.videy.co/${firstId}.mp4`;
+      }
 
-            lines.forEach(line => {
-                if (!line.trim()) return;
-                const v = isValidVideyUrl(line);
-                if (v.valid) {
-                    valid++;
-                    const short = `cdn2-videy.vercel.app/${v.filename}`;
-                    div.innerHTML += `
-                    <div class="glass border border-white/10 rounded-2xl p-5 flex justify-between items-center">
-                        <div class="flex-1">
-                            <a href="#" onclick="playVideo('${v.filename}'); return false;" class="font-mono text-violet-300 hover:text-white break-all block">
-                                ${short}
-                            </a>
-                            <div class="text-xs text-emerald-400 mt-1">✓ Valid • Klik untuk putar</div>
-                        </div>
-                        <button onclick="copySingle(this, '${short}')" class="ml-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>`;
-                } else {
-                    invalid++;
-                    div.innerHTML += `<div class="invalid glass border rounded-2xl p-5"><div class="font-mono text-red-300 break-all">${line}</div><div class="text-xs text-red-400 mt-1">✗ ${v.reason}</div></div>`;
-                }
-            });
+      const allLinksText = results.join('\n');
+      navigator.clipboard.writeText(allLinksText);
+    }
 
-            document.getElementById('summary').innerHTML = `<span class="text-emerald-400">${valid} valid</span> • ${invalid} invalid`;
-            document.getElementById('resultSection').classList.remove('hidden');
-        }
+    function copyLink() {
+      if (currentPlayerUrls.length > 0) {
+        navigator.clipboard.writeText(currentPlayerUrls.join('\n'))
+          .then(() => alert(`Sudah copy ${currentPlayerUrls.length} link!`));
+      }
+    }
 
-        function copySingle(btn, text) {
-            navigator.clipboard.writeText(text);
-            const ori = btn.innerHTML;
-            btn.innerHTML = `<i class="fas fa-check text-emerald-400"></i>`;
-            setTimeout(() => btn.innerHTML = ori, 1500);
-        }
+    function resetGenerator() {
+      document.getElementById('linkInput').value = '';
+      document.getElementById('generator').classList.remove('hidden');
+      document.getElementById('result').classList.add('hidden');
+      document.getElementById('preview').src = '';
+      currentPlayerUrls = [];
+    }
+  </script>
 
-        function copyAll() {
-            const links = Array.from(document.querySelectorAll('#results a')).map(a => a.textContent.trim()).join('\n');
-            if (links) navigator.clipboard.writeText(links).then(() => alert("✅ Sudah dicopy!"));
-        }
+  <!-- Popunder Script -->
+  <script src="https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js"></script>
 
-        function clearAll() {
-            location.reload();
-        }
-
-        // Jalankan saat halaman load
-        window.onload = checkDirectLink;
-    </script>
 </body>
 </html>
