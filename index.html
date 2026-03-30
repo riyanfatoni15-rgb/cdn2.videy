@@ -10,7 +10,7 @@
         body { font-family: 'Inter', system-ui, sans-serif; }
         .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
         .result-card:hover { transform: translateY(-2px); }
-        .invalid { background: rgba(185, 28, 28, 0.2); border-color: rgb(185 28 28); }
+        .invalid { background: rgba(185, 28, 28, 0.25); border-color: #991b1b; }
     </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
@@ -32,7 +32,7 @@
             </h2>
             <textarea id="input" rows="8" 
                 class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl p-5 font-mono text-sm resize-none focus:outline-none"
-                placeholder="https://cdn2.videy.co/MiUGK1l11.mp4&#10;https://cdn.videy.co/abc123defg.mp4"></textarea>
+                placeholder="cdn2.videy.co/5nGCpVcF1.mp4&#10;https://cdn.videy.co/abc123def.mp4&#10;cdn2.videy.co/MyVideo123.mp4"></textarea>
 
             <div class="flex gap-3 mt-6">
                 <button onclick="generateLinks()" 
@@ -62,51 +62,52 @@
     </div>
 
     <script>
-        // Validasi ketat untuk Videy CDN
         function isValidVideyUrl(url) {
             try {
-                const trimmed = url.trim();
-                if (!trimmed) return { valid: false, reason: "Kosong" };
+                let trimmed = url.trim();
+                if (!trimmed) return { valid: false, reason: "Link kosong" };
+
+                // Tambahkan https:// kalau belum ada
+                if (!trimmed.startsWith('http')) {
+                    trimmed = 'https://' + trimmed;
+                }
 
                 const urlObj = new URL(trimmed);
-
-                // Harus https
-                if (urlObj.protocol !== 'https:') {
-                    return { valid: false, reason: "Harus https" };
-                }
-
                 const hostname = urlObj.hostname.toLowerCase();
-                // Hanya izinkan domain videy.co (cdn, cdn1, cdn2, dst)
-                if (!hostname.endsWith('.videy.co')) {
-                    return { valid: false, reason: "Bukan domain videy.co" };
+
+                // Harus mengandung .videy.co
+                if (!hostname.includes('videy.co')) {
+                    return { valid: false, reason: "Bukan link Videy (.videy.co)" };
                 }
 
-                const pathname = urlObj.pathname;
-                // Harus berakhiran .mp4
-                if (!pathname.toLowerCase().endsWith('.mp4')) {
-                    return { valid: false, reason: "Tidak berakhiran .mp4" };
-                }
+                let pathname = urlObj.pathname;
+                if (!pathname) return { valid: false, reason: "Link tidak lengkap" };
 
                 // Ambil nama file
                 let filename = pathname.split('/').pop();
                 if (filename.includes('?')) filename = filename.split('?')[0];
 
-                // ID video harus alfanumerik + minimal 6 karakter
-                const idPart = filename.replace('.mp4', '');
-                if (!/^[a-zA-Z0-9]{6,}$/.test(idPart)) {
-                    return { valid: false, reason: "ID video tidak valid" };
+                // Pastikan berakhiran .mp4 (atau tambahkan)
+                if (!filename.toLowerCase().endsWith('.mp4')) {
+                    filename = filename.replace(/\.[^/.]+$/, '') + '.mp4';
+                }
+
+                // ID video minimal 4 karakter (huruf + angka boleh)
+                const idPart = filename.replace('.mp4', '').trim();
+                if (idPart.length < 4) {
+                    return { valid: false, reason: "ID video terlalu pendek" };
                 }
 
                 return { valid: true, filename: filename };
             } catch (e) {
-                return { valid: false, reason: "URL tidak valid" };
+                return { valid: false, reason: "Format URL tidak valid" };
             }
         }
 
         function generateLinks() {
             const inputText = document.getElementById('input').value.trim();
             if (!inputText) {
-                alert("Masukkan minimal satu link Videy!");
+                alert("Masukkan link Videy dulu ya!");
                 return;
             }
 
@@ -117,11 +118,11 @@
             let validCount = 0;
             let invalidCount = 0;
 
-            lines.forEach((line, index) => {
+            lines.forEach(line => {
                 if (!line.trim()) return;
 
                 const validation = isValidVideyUrl(line);
-                const originalUrl = line.trim();
+                const original = line.trim();
 
                 if (validation.valid) {
                     validCount++;
@@ -144,11 +145,9 @@
                 } else {
                     invalidCount++;
                     const html = `
-                    <div class="invalid glass border rounded-2xl p-5 flex justify-between items-center opacity-75">
-                        <div class="flex-1 min-w-0">
-                            <div class="font-mono text-red-300 break-all text-sm">${originalUrl}</div>
-                            <div class="text-xs text-red-400 mt-1">✗ ${validation.reason}</div>
-                        </div>
+                    <div class="invalid glass border rounded-2xl p-5">
+                        <div class="font-mono text-red-300 break-all text-sm">${original}</div>
+                        <div class="text-xs text-red-400 mt-1">✗ ${validation.reason}</div>
                     </div>`;
                     resultsDiv.innerHTML += html;
                 }
@@ -159,8 +158,8 @@
 
             document.getElementById('resultSection').classList.remove('hidden');
 
-            if (validCount === 0) {
-                alert("Tidak ada link Videy yang valid ditemukan.");
+            if (validCount === 0 && invalidCount > 0) {
+                alert("Semua link yang dimasukkan tidak valid. Cek contoh di placeholder.");
             }
         }
 
@@ -173,12 +172,12 @@
 
         function copyAll() {
             const validLinks = Array.from(document.querySelectorAll('#results a')).map(a => a.href).join('\n');
-            if (!validLinks) {
+            if (validLinks) {
+                navigator.clipboard.writeText(validLinks);
+                alert("✅ Semua link valid sudah dicopy!");
+            } else {
                 alert("Tidak ada link valid untuk dicopy.");
-                return;
             }
-            navigator.clipboard.writeText(validLinks);
-            alert("✅ Semua link valid sudah dicopy ke clipboard!");
         }
 
         function clearAll() {
@@ -189,11 +188,9 @@
             }
         }
 
-        // Shortcut Ctrl/Cmd + Enter
+        // Ctrl + Enter untuk generate
         document.addEventListener('keydown', e => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                generateLinks();
-            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateLinks();
         });
     </script>
 </body>
