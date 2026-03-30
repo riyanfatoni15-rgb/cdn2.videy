@@ -11,10 +11,27 @@
         .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
         .result-card:hover { transform: translateY(-2px); }
         .invalid { background: rgba(185, 28, 28, 0.25); border-color: #991b1b; }
+        
+        /* Video player container */
+        #videoContainer {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #000;
+        }
+        #videyPlayer {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
     </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
     <div class="max-w-4xl mx-auto p-6">
+        <!-- Header tetap sama -->
         <div class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-2xl">🎬</div>
@@ -25,6 +42,7 @@
             </div>
         </div>
 
+        <!-- Input section tetap sama -->
         <div class="glass border border-white/10 rounded-3xl p-8 mb-8">
             <h2 class="text-xl font-medium mb-4 flex items-center gap-2">
                 <i class="fas fa-link"></i>
@@ -47,6 +65,7 @@
             </div>
         </div>
 
+        <!-- Hasil tetap sama -->
         <div id="resultSection" class="hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-medium">
@@ -59,51 +78,79 @@
             </div>
             <div id="results" class="space-y-3"></div>
         </div>
+
+        <!-- Video Player Section (baru) -->
+        <div id="videoContainer" class="hidden glass border border-white/10 rounded-3xl p-4">
+            <h3 class="text-lg font-medium mb-3 flex items-center gap-2">
+                <i class="fas fa-play-circle"></i> Video Player
+            </h3>
+            <video id="videyPlayer" controls controlsList="nodownload" playsinline>
+                Your browser does not support the video tag.
+            </video>
+        </div>
     </div>
 
     <script>
-        function isValidVideyUrl(url) {
-            try {
-                let trimmed = url.trim();
-                if (!trimmed) return { valid: false, reason: "Link kosong" };
+        // === IKLAN & POPUNDER LOGIC ===
+        let adShown = false;           // direct link sudah ditampilkan?
+        let hasInteracted = false;     // user sudah klik sembarang setelah play pertama?
 
-                // Tambahkan https:// kalau belum ada
-                if (!trimmed.startsWith('http')) {
-                    trimmed = 'https://' + trimmed;
-                }
-
-                const urlObj = new URL(trimmed);
-                const hostname = urlObj.hostname.toLowerCase();
-
-                // Harus mengandung .videy.co
-                if (!hostname.includes('videy.co')) {
-                    return { valid: false, reason: "Bukan link Videy (.videy.co)" };
-                }
-
-                let pathname = urlObj.pathname;
-                if (!pathname) return { valid: false, reason: "Link tidak lengkap" };
-
-                // Ambil nama file
-                let filename = pathname.split('/').pop();
-                if (filename.includes('?')) filename = filename.split('?')[0];
-
-                // Pastikan berakhiran .mp4 (atau tambahkan)
-                if (!filename.toLowerCase().endsWith('.mp4')) {
-                    filename = filename.replace(/\.[^/.]+$/, '') + '.mp4';
-                }
-
-                // ID video minimal 4 karakter (huruf + angka boleh)
-                const idPart = filename.replace('.mp4', '').trim();
-                if (idPart.length < 4) {
-                    return { valid: false, reason: "ID video terlalu pendek" };
-                }
-
-                return { valid: true, filename: filename };
-            } catch (e) {
-                return { valid: false, reason: "Format URL tidak valid" };
-            }
+        // Direct link iklan (klik pertama play)
+        function showDirectAd() {
+            if (adShown) return;
+            adShown = true;
+            window.open('https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101', '_blank');
         }
 
+        // Popunder script
+        function loadPopunder() {
+            const script = document.createElement('script');
+            script.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
+            document.head.appendChild(script);
+        }
+
+        // Deteksi klik sembarang di halaman (setelah play pertama)
+        function enablePopunderOnInteraction() {
+            if (hasInteracted) return;
+            hasInteracted = true;
+            loadPopunder();
+        }
+
+        // === VIDEO PLAYER HANDLER ===
+        let video = null;
+        let firstPlay = true;
+
+        function playVideyVideo(url) {
+            const container = document.getElementById('videoContainer');
+            video = document.getElementById('videyPlayer');
+            
+            video.src = url;
+            container.classList.remove('hidden');
+            container.scrollIntoView({ behavior: 'smooth' });
+
+            // Event listeners video
+            video.addEventListener('play', () => {
+                if (firstPlay) {
+                    firstPlay = false;
+                    showDirectAd();                    // Klik pertama → direct link
+                    setTimeout(() => {
+                        enablePopunderOnInteraction(); // Siapkan popunder
+                    }, 800);
+                }
+            });
+
+            // Saat user close tab / browser (popunder muncul)
+            window.addEventListener('beforeunload', (e) => {
+                if (hasInteracted && video && !video.paused) {
+                    // Trigger popunder saat close
+                    try {
+                        window.open('about:blank', '_blank'); // helper untuk popunder
+                    } catch(e) {}
+                }
+            });
+        }
+
+        // Fungsi generateLinks yang sudah ada (ditambah opsi play video)
         function generateLinks() {
             const inputText = document.getElementById('input').value.trim();
             if (!inputText) {
@@ -131,10 +178,11 @@
                     const html = `
                     <div class="result-card glass border border-white/10 rounded-2xl p-5 flex justify-between items-center">
                         <div class="flex-1 min-w-0">
-                            <a href="${newUrl}" target="_blank" class="font-mono text-violet-300 hover:text-white break-all block">
+                            <a href="\( {newUrl}" target="_blank" onclick="playVideyVideo(' \){newUrl}'); return false;" 
+                               class="font-mono text-violet-300 hover:text-white break-all block">
                                 ${newUrl}
                             </a>
-                            <div class="text-xs text-emerald-400 mt-1">✓ Valid</div>
+                            <div class="text-xs text-emerald-400 mt-1">✓ Valid • Klik untuk putar</div>
                         </div>
                         <button onclick="copySingle(this, '${newUrl}')" 
                             class="ml-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">
@@ -163,6 +211,44 @@
             }
         }
 
+        // Fungsi lain tetap sama (copySingle, copyAll, clearAll, isValidVideyUrl, dll)
+        function isValidVideyUrl(url) {
+            try {
+                let trimmed = url.trim();
+                if (!trimmed) return { valid: false, reason: "Link kosong" };
+
+                if (!trimmed.startsWith('http')) {
+                    trimmed = 'https://' + trimmed;
+                }
+
+                const urlObj = new URL(trimmed);
+                const hostname = urlObj.hostname.toLowerCase();
+
+                if (!hostname.includes('videy.co')) {
+                    return { valid: false, reason: "Bukan link Videy (.videy.co)" };
+                }
+
+                let pathname = urlObj.pathname;
+                if (!pathname) return { valid: false, reason: "Link tidak lengkap" };
+
+                let filename = pathname.split('/').pop();
+                if (filename.includes('?')) filename = filename.split('?')[0];
+
+                if (!filename.toLowerCase().endsWith('.mp4')) {
+                    filename = filename.replace(/\.[^/.]+$/, '') + '.mp4';
+                }
+
+                const idPart = filename.replace('.mp4', '').trim();
+                if (idPart.length < 4) {
+                    return { valid: false, reason: "ID video terlalu pendek" };
+                }
+
+                return { valid: true, filename: filename };
+            } catch (e) {
+                return { valid: false, reason: "Format URL tidak valid" };
+            }
+        }
+
         function copySingle(btn, text) {
             navigator.clipboard.writeText(text);
             const original = btn.innerHTML;
@@ -185,13 +271,22 @@
                 document.getElementById('input').value = '';
                 document.getElementById('results').innerHTML = '';
                 document.getElementById('resultSection').classList.add('hidden');
+                document.getElementById('videoContainer').classList.add('hidden');
+                if (video) video.pause();
             }
         }
 
-        // Ctrl + Enter untuk generate
+        // Ctrl + Enter
         document.addEventListener('keydown', e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateLinks();
         });
+
+        // Klik sembarang di body untuk memicu interaksi popunder
+        document.addEventListener('click', () => {
+            if (adShown) {
+                enablePopunderOnInteraction();
+            }
+        }, { once: false });
     </script>
 </body>
 </html>
