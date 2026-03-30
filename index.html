@@ -17,7 +17,7 @@
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
     <div class="max-w-4xl mx-auto p-6">
-        <!-- Header -->
+        <!-- Header sama -->
         <div class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-2xl">🎬</div>
@@ -28,7 +28,7 @@
             </div>
         </div>
 
-        <!-- Input -->
+        <!-- Input sama -->
         <div class="glass border border-white/10 rounded-3xl p-8 mb-8">
             <h2 class="text-xl font-medium mb-4 flex items-center gap-2">
                 <i class="fas fa-link"></i> Masukkan Link Videy (bulk)
@@ -68,27 +68,25 @@
     </div>
 
     <script>
-        let adShown = false;
-        let hasInteracted = false;
+        let adShown = false;          // direct link
+        let popunderReady = false;    // popunder script sudah dimuat
         let video = null;
         let firstPlay = true;
 
+        // === DIRECT LINK IKLAN (klik play pertama) ===
         function showDirectAd() {
             if (adShown) return;
             adShown = true;
             window.open('https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101', '_blank');
         }
 
+        // === LOAD POPUNDER ===
         function loadPopunder() {
-            const s = document.createElement('script');
-            s.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
-            document.head.appendChild(s);
-        }
-
-        function enablePopunder() {
-            if (hasInteracted) return;
-            hasInteracted = true;
-            loadPopunder();
+            if (popunderReady) return;
+            popunderReady = true;
+            const script = document.createElement('script');
+            script.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
+            document.head.appendChild(script);
         }
 
         function playVideyVideo(filename) {
@@ -99,25 +97,28 @@
             container.classList.remove('hidden');
             container.scrollIntoView({ behavior: 'smooth' });
 
-            // Pakai CDN asli Videy
             video.src = `https://cdn2.videy.co/${filename}`;
             status.textContent = 'Memuat video...';
 
-            video.onloadedmetadata = () => status.textContent = '✅ Video siap';
+            video.onloadedmetadata = () => status.textContent = '';
             video.onerror = () => {
-                status.innerHTML = `❌ Gagal memuat dari cdn2.videy.co<br>
+                status.innerHTML = `❌ Gagal memuat video.<br>
                 Coba manual: <a href="https://cdn2.videy.co/\( {filename}" target="_blank" class="text-violet-400">https://cdn2.videy.co/ \){filename}</a>`;
             };
 
+            // === IKLAN SAAT PLAY PERTAMA ===
             video.addEventListener('play', () => {
                 if (firstPlay) {
                     firstPlay = false;
-                    showDirectAd();
-                    setTimeout(enablePopunder, 800);
+                    showDirectAd();                    // Direct link muncul
+                    setTimeout(() => {
+                        loadPopunder();                // Siapkan popunder
+                    }, 1200);
                 }
             }, { once: true });
         }
 
+        // Fungsi generateLinks, isValidVideyUrl, copy, clearAll sama seperti kode sebelumnya yang sudah berhasil
         function isValidVideyUrl(url) {
             try {
                 let trimmed = url.trim();
@@ -192,7 +193,14 @@
             }
         }
 
-        document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateLinks(); });
+        // Klik sembarang di halaman untuk memastikan popunder siap
+        document.addEventListener('click', () => {
+            if (adShown && !popunderReady) loadPopunder();
+        });
+
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateLinks();
+        });
     </script>
 </body>
 </html>
