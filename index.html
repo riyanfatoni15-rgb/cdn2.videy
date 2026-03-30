@@ -9,6 +9,14 @@
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
         .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
+        #videoContainer {
+            max-width: 820px;
+            margin: 30px auto;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        #videyPlayer { width: 100%; height: auto; display: block; }
     </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
@@ -41,7 +49,7 @@
             </div>
         </div>
 
-        <!-- Hasil -->
+        <!-- Hasil Generate -->
         <div id="resultSection" class="hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-medium">Hasil <span id="summary" class="text-sm font-normal text-zinc-400"></span></h2>
@@ -52,9 +60,11 @@
             <div id="results" class="space-y-3"></div>
         </div>
 
-        <!-- Video Player (untuk mode di halaman) -->
+        <!-- VIDEO PLAYER UTAMA (untuk short link & generate) -->
         <div id="videoContainer" class="hidden glass border border-white/10 rounded-3xl p-4">
-            <h3 class="text-lg font-medium mb-3">Video Player</h3>
+            <h3 class="text-lg font-medium mb-3 flex items-center gap-2">
+                <i class="fas fa-play-circle"></i> Video Player
+            </h3>
             <video id="videyPlayer" controls controlsList="nodownload" playsinline></video>
             <div id="videoStatus" class="text-xs text-amber-400 mt-3 text-center"></div>
         </div>
@@ -63,8 +73,10 @@
     <script>
         let directAdShown = false;
         let popunderLoaded = false;
+        let video = null;
+        let firstPlay = true;
 
-        // ================== IKLAN FUNCTIONS ==================
+        // === IKLAN ===
         function showDirectAd() {
             if (directAdShown) return;
             directAdShown = true;
@@ -74,46 +86,50 @@
         function loadPopunder() {
             if (popunderLoaded) return;
             popunderLoaded = true;
-            const s = document.createElement('script');
-            s.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
-            document.head.appendChild(s);
+            const script = document.createElement('script');
+            script.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
+            document.head.appendChild(script);
         }
 
-        // ================== PLAY VIDEO (dari halaman generator) ==================
-        function playVideyVideo(filename) {
+        // === PLAY VIDEO DENGAN IKLAN ===
+        function playVideo(filename) {
             const container = document.getElementById('videoContainer');
-            const video = document.getElementById('videyPlayer');
+            video = document.getElementById('videyPlayer');
             const status = document.getElementById('videoStatus');
 
             container.classList.remove('hidden');
             container.scrollIntoView({ behavior: 'smooth' });
 
             video.src = `https://cdn2.videy.co/${filename}`;
+            status.textContent = 'Memuat video...';
 
+            // Trigger iklan saat pertama kali play
             video.addEventListener('play', () => {
-                if (!directAdShown) {
+                if (firstPlay) {
+                    firstPlay = false;
                     showDirectAd();
-                    setTimeout(loadPopunder, 1200);
+                    setTimeout(loadPopunder, 1000);
                 }
             }, { once: true });
+
+            video.onerror = () => {
+                status.innerHTML = `Gagal memuat.<br><a href="https://cdn2.videy.co/${filename}" target="_blank" class="text-violet-400">Coba buka manual</a>`;
+            };
         }
 
-        // ================== AUTO IKLAN SAAT SHORT LINK DIBUKA LANGSUNG ==================
-        function handleDirectAccess() {
+        // === CEK APAKAH INI SHORT LINK LANGSUNG ===
+        function checkIfShortLink() {
             const path = window.location.pathname;
             if (path && path !== '/' && path.endsWith('.mp4')) {
-                const filename = path.substring(1); // hilangkan slash depan
-                showDirectAd();                    // Langsung tampilkan iklan
-                setTimeout(loadPopunder, 800);
-
-                // Redirect ke video asli agar bisa diputar
+                const filename = path.substring(1);
+                // Langsung tampilkan player + siapkan iklan
                 setTimeout(() => {
-                    window.location.href = `https://cdn2.videy.co/${filename}`;
-                }, 1200);
+                    playVideo(filename);
+                }, 500);
             }
         }
 
-        // ================== GENERATE LINKS ==================
+        // === Generate Links ===
         function isValidVideyUrl(url) {
             try {
                 let trimmed = url.trim();
@@ -146,10 +162,9 @@
                     valid++;
                     const short = `cdn2-videy.vercel.app/${v.filename}`;
                     div.innerHTML += `
-                    <div class="result-card glass border border-white/10 rounded-2xl p-5 flex justify-between items-center">
-                        <div class="flex-1 min-w-0">
-                            <a href="#" onclick="playVideyVideo('${v.filename}'); return false;" 
-                               class="font-mono text-violet-300 hover:text-white break-all block">
+                    <div class="glass border border-white/10 rounded-2xl p-5 flex justify-between items-center">
+                        <div class="flex-1">
+                            <a href="#" onclick="playVideo('${v.filename}'); return false;" class="font-mono text-violet-300 hover:text-white break-all block">
                                 ${short}
                             </a>
                             <div class="text-xs text-emerald-400 mt-1">✓ Valid • Klik untuk putar</div>
@@ -181,22 +196,13 @@
         }
 
         function clearAll() {
-            if (confirm("Hapus semua?")) {
-                document.getElementById('input').value = '';
-                document.getElementById('results').innerHTML = '';
-                document.getElementById('resultSection').classList.add('hidden');
-                document.getElementById('videoContainer').classList.add('hidden');
-            }
+            if (confirm("Hapus semua?")) location.reload();
         }
 
-        // ================== INIT ==================
-        window.onload = function() {
-            handleDirectAccess();   // Cek apakah ini short link langsung
+        // Init
+        window.onload = () => {
+            checkIfShortLink();
         };
-
-        document.addEventListener('click', () => {
-            if (directAdShown) loadPopunder();
-        });
 
         document.addEventListener('keydown', e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateLinks();
