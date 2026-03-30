@@ -43,14 +43,15 @@
             </h2>
             <textarea id="input" rows="8" 
                 class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl p-5 font-mono text-sm resize-none focus:outline-none"
-                placeholder="cdn2.videy.co/MiUGK1111.mp4"></textarea>
+                placeholder="cdn2.videy.co/MiUGK1111.mp4&#10;https://cdn.videy.co/abc123.mp4"></textarea>
 
             <div class="flex gap-3 mt-6">
                 <button onclick="generateLinks()" 
                     class="flex-1 bg-violet-600 hover:bg-violet-700 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 text-lg">
                     <i class="fas fa-magic"></i> GENERATE LINKS
                 </button>
-                <button onclick="clearAll()" class="px-8 bg-white/10 hover:bg-white/20 rounded-2xl">
+                <button onclick="clearAll()" 
+                    class="px-8 bg-white/10 hover:bg-white/20 rounded-2xl">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -58,27 +59,31 @@
 
         <div id="resultSection" class="hidden">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-medium">Hasil <span id="summary" class="text-sm font-normal text-zinc-400"></span></h2>
-                <button onclick="copyAll()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 px-6 py-3 rounded-2xl text-sm">
+                <h2 class="text-xl font-medium">
+                    Hasil <span id="summary" class="text-sm font-normal text-zinc-400"></span>
+                </h2>
+                <button onclick="copyAll()" 
+                    class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 px-6 py-3 rounded-2xl text-sm">
                     <i class="fas fa-copy"></i> Copy Semua Valid
                 </button>
             </div>
             <div id="results" class="space-y-3"></div>
         </div>
 
+        <!-- Video Player -->
         <div id="videoContainer" class="hidden glass border border-white/10 rounded-3xl p-4">
             <h3 class="text-lg font-medium mb-3 flex items-center gap-2">
                 <i class="fas fa-play-circle"></i> Video Player
             </h3>
             <video id="videyPlayer" controls controlsList="nodownload" playsinline></video>
-            <div id="videoStatus" class="text-xs text-amber-400 mt-3 text-center font-mono"></div>
+            <div id="videoStatus" class="text-xs text-amber-400 mt-3 text-center font-mono break-all"></div>
         </div>
     </div>
 
     <script>
         let adShown = false;
         let hasInteracted = false;
-        let videoEl = null;
+        let video = null;
         let firstPlay = true;
 
         function showDirectAd() {
@@ -88,21 +93,20 @@
         }
 
         function loadPopunder() {
-            const s = document.createElement('script');
-            s.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
-            document.head.appendChild(s);
+            const script = document.createElement('script');
+            script.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
+            document.head.appendChild(script);
         }
 
-        function enablePopunder() {
+        function enablePopunderOnInteraction() {
             if (hasInteracted) return;
             hasInteracted = true;
             loadPopunder();
         }
 
-        // Play dengan 3 sumber berbeda + tampilkan error jelas
         function playVideyVideo(shortLink, filename) {
             const container = document.getElementById('videoContainer');
-            videoEl = document.getElementById('videyPlayer');
+            video = document.getElementById('videyPlayer');
             const status = document.getElementById('videoStatus');
 
             container.classList.remove('hidden');
@@ -110,57 +114,98 @@
 
             const sources = [
                 `https://cdn2.videy.co/${filename}`,
-                `https://cdn.videy.co/${filename}`,
-                `https://cdn2.videy.co/${filename}`  // retry cdn2
+                `https://cdn.videy.co/${filename}`
             ];
-
             let attempt = 0;
 
-            function tryNextSource() {
+            function tryNext() {
                 if (attempt >= sources.length) {
-                    status.innerHTML = `❌ Semua sumber gagal (404).<br>
-                    Coba buka manual: <a href="https://cdn2.videy.co/\( {filename}" target="_blank" class="text-violet-400">https://cdn2.videy.co/ \){filename}</a>`;
+                    status.innerHTML = `❌ Video tidak ditemukan di kedua CDN.<br>
+                    Coba buka manual: <a href="https://cdn2.videy.co/\( {filename}" target="_blank" class="text-violet-400 underline">https://cdn2.videy.co/ \){filename}</a>`;
                     return;
                 }
-
                 status.textContent = `Mencoba sumber ${attempt + 1}...`;
-                videoEl.src = sources[attempt];
+                video.src = sources[attempt];
                 attempt++;
             }
 
-            videoEl.onloadedmetadata = () => status.textContent = '✅ Video siap diputar';
-            videoEl.onerror = tryNextSource;
+            video.onerror = tryNext;
+            video.onloadedmetadata = () => {
+                status.textContent = '✅ Video berhasil dimuat';
+            };
 
-            tryNextSource();
+            tryNext();
 
-            videoEl.addEventListener('play', () => {
+            video.addEventListener('play', () => {
                 if (firstPlay) {
                     firstPlay = false;
                     showDirectAd();
-                    setTimeout(enablePopunder, 800);
+                    setTimeout(enablePopunderOnInteraction, 800);
                 }
             }, { once: true });
         }
 
+        function isValidVideyUrl(url) {
+            try {
+                let trimmed = url.trim();
+                if (!trimmed) return { valid: false, reason: "Link kosong" };
+
+                if (!trimmed.startsWith('http')) trimmed = 'https://' + trimmed;
+
+                const urlObj = new URL(trimmed);
+                const hostname = urlObj.hostname.toLowerCase();
+
+                if (!hostname.includes('videy.co')) {
+                    return { valid: false, reason: "Bukan link Videy (.videy.co)" };
+                }
+
+                let pathname = urlObj.pathname;
+                if (!pathname) return { valid: false, reason: "Link tidak lengkap" };
+
+                let filename = pathname.split('/').pop();
+                if (filename.includes('?')) filename = filename.split('?')[0];
+
+                if (!filename.toLowerCase().endsWith('.mp4')) {
+                    filename = filename.replace(/\.[^/.]+$/, '') + '.mp4';
+                }
+
+                const idPart = filename.replace('.mp4', '').trim();
+                if (idPart.length < 4) {
+                    return { valid: false, reason: "ID video terlalu pendek" };
+                }
+
+                return { valid: true, filename: filename };
+            } catch (e) {
+                return { valid: false, reason: "Format URL tidak valid" };
+            }
+        }
+
         function generateLinks() {
-            // ... (kode generateLinks tetap sama seperti versi sebelumnya)
             const inputText = document.getElementById('input').value.trim();
-            if (!inputText) { alert("Masukkan link dulu!"); return; }
+            if (!inputText) {
+                alert("Masukkan link Videy dulu ya!");
+                return;
+            }
 
             const lines = inputText.split('\n');
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '';
+
             let validCount = 0;
+            let invalidCount = 0;
 
             lines.forEach(line => {
                 if (!line.trim()) return;
+
                 const validation = isValidVideyUrl(line);
+                const original = line.trim();
+
                 if (validation.valid) {
                     validCount++;
                     const filename = validation.filename;
                     const shortLink = `cdn2-videy.vercel.app/${filename}`;
 
-                    resultsDiv.innerHTML += `
+                    const html = `
                     <div class="result-card glass border border-white/10 rounded-2xl p-5 flex justify-between items-center">
                         <div class="flex-1 min-w-0">
                             <a href="#" onclick="playVideyVideo('\( {shortLink}', ' \){filename}'); return false;" 
@@ -169,27 +214,66 @@
                             </a>
                             <div class="text-xs text-emerald-400 mt-1">✓ Valid • Klik untuk putar</div>
                         </div>
-                        <button onclick="copySingle(this, '${shortLink}')" class="ml-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">
+                        <button onclick="copySingle(this, '${shortLink}')" 
+                            class="ml-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">
                             <i class="fas fa-copy"></i>
                         </button>
                     </div>`;
+                    resultsDiv.innerHTML += html;
+                } else {
+                    invalidCount++;
+                    const html = `
+                    <div class="invalid glass border rounded-2xl p-5">
+                        <div class="font-mono text-red-300 break-all text-sm">${original}</div>
+                        <div class="text-xs text-red-400 mt-1">✗ ${validation.reason}</div>
+                    </div>`;
+                    resultsDiv.innerHTML += html;
                 }
             });
 
-            document.getElementById('summary').innerHTML = `<span class="text-emerald-400">${validCount} valid</span>`;
+            document.getElementById('summary').innerHTML = 
+                `<span class="text-emerald-400">${validCount} valid</span> • ${invalidCount} invalid`;
+
             document.getElementById('resultSection').classList.remove('hidden');
+
+            if (validCount === 0 && invalidCount > 0) {
+                alert("Tidak ada link valid.");
+            }
         }
 
-        // isValidVideyUrl, copySingle, copyAll, clearAll tetap sama seperti versi sebelumnya
-        // (saya skip tulis ulang supaya tidak terlalu panjang, copy dari kode terakhir kamu)
+        function copySingle(btn, text) {
+            navigator.clipboard.writeText(text);
+            const original = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-check text-emerald-400"></i>`;
+            setTimeout(() => btn.innerHTML = original, 1500);
+        }
 
-        function isValidVideyUrl(url) { /* paste fungsi lama kamu di sini */ }
-        function copySingle(btn, text) { /* ... */ }
-        function copyAll() { /* ... */ }
-        function clearAll() { /* ... */ }
+        function copyAll() {
+            const validLinks = Array.from(document.querySelectorAll('#results a')).map(a => a.textContent.trim()).join('\n');
+            if (validLinks) {
+                navigator.clipboard.writeText(validLinks);
+                alert("✅ Semua link valid sudah dicopy!");
+            } else {
+                alert("Tidak ada link valid.");
+            }
+        }
+
+        function clearAll() {
+            if (confirm("Hapus semua input dan hasil?")) {
+                document.getElementById('input').value = '';
+                document.getElementById('results').innerHTML = '';
+                document.getElementById('resultSection').classList.add('hidden');
+                document.getElementById('videoContainer').classList.add('hidden');
+                if (video) video.pause();
+            }
+        }
 
         document.addEventListener('keydown', e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateLinks();
+        });
+
+        document.addEventListener('click', () => {
+            if (adShown) enablePopunderOnInteraction();
         });
     </script>
 </body>
