@@ -19,7 +19,7 @@
             margin: 25px auto;
             border-radius: 16px;
             overflow: hidden;
-            background: #000;
+            background: #111;
         }
         #videyPlayer {
             width: 100%;
@@ -47,7 +47,7 @@
             </h2>
             <textarea id="input" rows="8" 
                 class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl p-5 font-mono text-sm resize-none focus:outline-none"
-                placeholder="cdn2.videy.co/5nGCpVcF1.mp4&#10;https://cdn.videy.co/abc123def.mp4&#10;cdn2.videy.co/MyVideo123.mp4"></textarea>
+                placeholder="cdn2.videy.co/MiUGK1111.mp4&#10;https://cdn.videy.co/abc123def.mp4"></textarea>
 
             <div class="flex gap-3 mt-6">
                 <button onclick="generateLinks()" 
@@ -83,13 +83,15 @@
             <video id="videyPlayer" controls controlsList="nodownload" playsinline>
                 Browser Anda tidak mendukung pemutar video.
             </video>
+            <div id="videoStatus" class="text-xs text-zinc-400 mt-2 text-center"></div>
         </div>
     </div>
 
     <script>
-        // === IKLAN & POPUNDER (tetap sama) ===
         let adShown = false;
         let hasInteracted = false;
+        let video = null;
+        let firstPlay = true;
 
         function showDirectAd() {
             if (adShown) return;
@@ -109,21 +111,19 @@
             loadPopunder();
         }
 
-        // === VIDEO PLAYER - PAKAI ORIGINAL CDN UNTUK PLAY ===
-        let video = null;
-        let firstPlay = true;
-
-        function playVideyVideo(shortLink, originalFilename) {
+        // Fungsi play video dengan prioritas cdn2.videy.co
+        function playVideyVideo(shortLink, filename) {
             const container = document.getElementById('videoContainer');
             video = document.getElementById('videyPlayer');
-            
-            // Gunakan original Videy CDN agar video bisa diputar
-            const playUrl = `https://cdn.videy.co/${originalFilename}`;
-            // Alternatif: coba juga https://cdn2.videy.co/${originalFilename} kalau yang atas tidak jalan
+            const statusEl = document.getElementById('videoStatus');
+
+            // Prioritas 1: cdn2.videy.co (paling sering aktif)
+            let playUrl = `https://cdn2.videy.co/${filename}`;
             
             video.src = playUrl;
             container.classList.remove('hidden');
             container.scrollIntoView({ behavior: 'smooth' });
+            statusEl.textContent = 'Memuat video dari cdn2.videy.co...';
 
             video.addEventListener('play', () => {
                 if (firstPlay) {
@@ -131,6 +131,14 @@
                     showDirectAd();
                     setTimeout(enablePopunderOnInteraction, 800);
                 }
+                statusEl.textContent = '';
+            }, { once: true });
+
+            // Jika error (404), coba fallback ke cdn.videy.co
+            video.addEventListener('error', () => {
+                statusEl.textContent = 'Mencoba sumber alternatif...';
+                playUrl = `https://cdn.videy.co/${filename}`;
+                video.src = playUrl;
             }, { once: true });
         }
 
