@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Videy Link Generator</title>
+    <title>Videy Link Generator - videy-v2.vercel.app</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -11,193 +12,184 @@
         .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
         .result-card:hover { transform: translateY(-2px); }
         .invalid { background: rgba(185, 28, 28, 0.25); border-color: #991b1b; }
-        #videoContainer { max-width: 820px; margin: 25px auto; border-radius: 16px; overflow: hidden; background: #111; }
-        #videyPlayer { width: 100%; height: auto; }
     </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
     <div class="max-w-4xl mx-auto p-6">
-        <!-- Header sama -->
         <div class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-violet-600 rounded-2xl flex items-center justify-center text-2xl">🎬</div>
                 <div>
                     <h1 class="text-3xl font-semibold">Videy Link Generator</h1>
-                    <p class="text-zinc-400">cdn.videy.co → cdn2-videy.vercel.app</p>
+                    <p class="text-zinc-400">cdn.videy.co → videy-v2.vercel.app</p>
                 </div>
             </div>
         </div>
 
-        <!-- Input sama -->
         <div class="glass border border-white/10 rounded-3xl p-8 mb-8">
             <h2 class="text-xl font-medium mb-4 flex items-center gap-2">
-                <i class="fas fa-link"></i> Masukkan Link Videy (bulk)
+                <i class="fas fa-link"></i>
+                Masukkan Link Videy (bulk)
             </h2>
-            <textarea id="input" rows="8" class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl p-5 font-mono text-sm resize-none focus:outline-none"
-                placeholder="cdn2.videy.co/3iDhkNg11.mp4"></textarea>
+            <textarea id="input" rows="8" 
+                class="w-full bg-zinc-900 border border-white/10 focus:border-violet-500 rounded-2xl p-5 font-mono text-sm resize-none focus:outline-none"
+                placeholder="cdn2.videy.co/5nGCpVcF1.mp4&#10;https://cdn.videy.co/abc123def.mp4&#10;cdn2.videy.co/MyVideo123.mp4"></textarea>
 
             <div class="flex gap-3 mt-6">
-                <button onclick="generateLinks()" class="flex-1 bg-violet-600 hover:bg-violet-700 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 text-lg">
-                    <i class="fas fa-magic"></i> GENERATE LINKS
+                <button onclick="generateLinks()" 
+                    class="flex-1 bg-violet-600 hover:bg-violet-700 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 text-lg">
+                    <i class="fas fa-magic"></i>
+                    GENERATE LINKS
                 </button>
-                <button onclick="clearAll()" class="px-8 bg-white/10 hover:bg-white/20 rounded-2xl">
+                <button onclick="clearAll()" 
+                    class="px-8 bg-white/10 hover:bg-white/20 rounded-2xl">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Hasil -->
         <div id="resultSection" class="hidden">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-medium">Hasil <span id="summary" class="text-sm font-normal text-zinc-400"></span></h2>
-                <button onclick="copyAll()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 px-6 py-3 rounded-2xl text-sm">
+                <h2 class="text-xl font-medium">
+                    Hasil <span id="summary" class="text-sm font-normal text-zinc-400"></span>
+                </h2>
+                <button onclick="copyAll()" 
+                    class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 px-6 py-3 rounded-2xl text-sm">
                     <i class="fas fa-copy"></i> Copy Semua Valid
                 </button>
             </div>
             <div id="results" class="space-y-3"></div>
         </div>
-
-        <!-- Video Player -->
-        <div id="videoContainer" class="hidden glass border border-white/10 rounded-3xl p-4">
-            <h3 class="text-lg font-medium mb-3 flex items-center gap-2">
-                <i class="fas fa-play-circle"></i> Video Player
-            </h3>
-            <video id="videyPlayer" controls controlsList="nodownload" playsinline></video>
-            <div id="videoStatus" class="text-xs text-amber-400 mt-3 text-center"></div>
-        </div>
     </div>
 
     <script>
-        let adShown = false;          // direct link
-        let popunderReady = false;    // popunder script sudah dimuat
-        let video = null;
-        let firstPlay = true;
-
-        // === DIRECT LINK IKLAN (klik play pertama) ===
-        function showDirectAd() {
-            if (adShown) return;
-            adShown = true;
-            window.open('https://jackknifemonuments.com/jv8xiueh?key=d2505f9b9a140229096fea80f3d15101', '_blank');
-        }
-
-        // === LOAD POPUNDER ===
-        function loadPopunder() {
-            if (popunderReady) return;
-            popunderReady = true;
-            const script = document.createElement('script');
-            script.src = 'https://jackknifemonuments.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
-            document.head.appendChild(script);
-        }
-
-        function playVideyVideo(filename) {
-            const container = document.getElementById('videoContainer');
-            video = document.getElementById('videyPlayer');
-            const status = document.getElementById('videoStatus');
-
-            container.classList.remove('hidden');
-            container.scrollIntoView({ behavior: 'smooth' });
-
-            video.src = `https://cdn2.videy.co/${filename}`;
-            status.textContent = 'Memuat video...';
-
-            video.onloadedmetadata = () => status.textContent = '';
-            video.onerror = () => {
-                status.innerHTML = `❌ Gagal memuat video.<br>
-                Coba manual: <a href="https://cdn2.videy.co/\( {filename}" target="_blank" class="text-violet-400">https://cdn2.videy.co/ \){filename}</a>`;
-            };
-
-            // === IKLAN SAAT PLAY PERTAMA ===
-            video.addEventListener('play', () => {
-                if (firstPlay) {
-                    firstPlay = false;
-                    showDirectAd();                    // Direct link muncul
-                    setTimeout(() => {
-                        loadPopunder();                // Siapkan popunder
-                    }, 1200);
-                }
-            }, { once: true });
-        }
-
-        // Fungsi generateLinks, isValidVideyUrl, copy, clearAll sama seperti kode sebelumnya yang sudah berhasil
         function isValidVideyUrl(url) {
             try {
                 let trimmed = url.trim();
                 if (!trimmed) return { valid: false, reason: "Link kosong" };
-                if (!trimmed.startsWith('http')) trimmed = 'https://' + trimmed;
-                const u = new URL(trimmed);
-                if (!u.hostname.includes('videy.co')) return { valid: false, reason: "Bukan link Videy" };
-                let fn = u.pathname.split('/').pop().split('?')[0];
-                if (!fn.toLowerCase().endsWith('.mp4')) fn += '.mp4';
-                if (fn.replace('.mp4','').length < 4) return { valid: false, reason: "ID terlalu pendek" };
-                return { valid: true, filename: fn };
+
+                // Tambahkan https:// kalau belum ada
+                if (!trimmed.startsWith('http')) {
+                    trimmed = 'https://' + trimmed;
+                }
+
+                const urlObj = new URL(trimmed);
+                const hostname = urlObj.hostname.toLowerCase();
+
+                // Harus mengandung .videy.co
+                if (!hostname.includes('videy.co')) {
+                    return { valid: false, reason: "Bukan link Videy (.videy.co)" };
+                }
+
+                let pathname = urlObj.pathname;
+                if (!pathname) return { valid: false, reason: "Link tidak lengkap" };
+
+                // Ambil nama file
+                let filename = pathname.split('/').pop();
+                if (filename.includes('?')) filename = filename.split('?')[0];
+
+                // Pastikan berakhiran .mp4 (atau tambahkan)
+                if (!filename.toLowerCase().endsWith('.mp4')) {
+                    filename = filename.replace(/\.[^/.]+$/, '') + '.mp4';
+                }
+
+                // ID video minimal 4 karakter (huruf + angka boleh)
+                const idPart = filename.replace('.mp4', '').trim();
+                if (idPart.length < 4) {
+                    return { valid: false, reason: "ID video terlalu pendek" };
+                }
+
+                return { valid: true, filename: filename };
             } catch (e) {
-                return { valid: false, reason: "Format tidak valid" };
+                return { valid: false, reason: "Format URL tidak valid" };
             }
         }
 
         function generateLinks() {
-            const text = document.getElementById('input').value.trim();
-            if (!text) return alert("Masukkan link dulu!");
+            const inputText = document.getElementById('input').value.trim();
+            if (!inputText) {
+                alert("Masukkan link Videy dulu ya!");
+                return;
+            }
 
-            const lines = text.split('\n');
-            const div = document.getElementById('results');
-            div.innerHTML = '';
-            let valid = 0, invalid = 0;
+            const lines = inputText.split('\n');
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            let validCount = 0;
+            let invalidCount = 0;
 
             lines.forEach(line => {
                 if (!line.trim()) return;
-                const v = isValidVideyUrl(line);
-                if (v.valid) {
-                    valid++;
-                    const short = `cdn2-videy.vercel.app/${v.filename}`;
-                    div.innerHTML += `
+
+                const validation = isValidVideyUrl(line);
+                const original = line.trim();
+
+                if (validation.valid) {
+                    validCount++;
+                    const newUrl = `https://videy-v2.vercel.app/${validation.filename}`;
+
+                    const html = `
                     <div class="result-card glass border border-white/10 rounded-2xl p-5 flex justify-between items-center">
-                        <div class="flex-1">
-                            <a href="#" onclick="playVideyVideo('${v.filename}'); return false;" class="font-mono text-violet-300 hover:text-white break-all block">
-                                ${short}
+                        <div class="flex-1 min-w-0">
+                            <a href="${newUrl}" target="_blank" class="font-mono text-violet-300 hover:text-white break-all block">
+                                ${newUrl}
                             </a>
-                            <div class="text-xs text-emerald-400 mt-1">✓ Valid • Klik untuk putar</div>
+                            <div class="text-xs text-emerald-400 mt-1">✓ Valid</div>
                         </div>
-                        <button onclick="copySingle(this, '${short}')" class="ml-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">
+                        <button onclick="copySingle(this, '${newUrl}')" 
+                            class="ml-4 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-sm">
                             <i class="fas fa-copy"></i>
                         </button>
                     </div>`;
+                    resultsDiv.innerHTML += html;
                 } else {
-                    invalid++;
-                    div.innerHTML += `<div class="invalid glass border rounded-2xl p-5"><div class="font-mono text-red-300 break-all">${line}</div><div class="text-xs text-red-400 mt-1">✗ ${v.reason}</div></div>`;
+                    invalidCount++;
+                    const html = `
+                    <div class="invalid glass border rounded-2xl p-5">
+                        <div class="font-mono text-red-300 break-all text-sm">${original}</div>
+                        <div class="text-xs text-red-400 mt-1">✗ ${validation.reason}</div>
+                    </div>`;
+                    resultsDiv.innerHTML += html;
                 }
             });
 
-            document.getElementById('summary').innerHTML = `<span class="text-emerald-400">${valid} valid</span> • ${invalid} invalid`;
+            document.getElementById('summary').innerHTML = 
+                `<span class="text-emerald-400">${validCount} valid</span> • ${invalidCount} invalid`;
+
             document.getElementById('resultSection').classList.remove('hidden');
+
+            if (validCount === 0 && invalidCount > 0) {
+                alert("Semua link yang dimasukkan tidak valid. Cek contoh di placeholder.");
+            }
         }
 
         function copySingle(btn, text) {
             navigator.clipboard.writeText(text);
-            const ori = btn.innerHTML;
+            const original = btn.innerHTML;
             btn.innerHTML = `<i class="fas fa-check text-emerald-400"></i>`;
-            setTimeout(() => btn.innerHTML = ori, 1500);
+            setTimeout(() => btn.innerHTML = original, 1500);
         }
 
         function copyAll() {
-            const links = Array.from(document.querySelectorAll('#results a')).map(a => a.textContent.trim()).join('\n');
-            if (links) navigator.clipboard.writeText(links).then(() => alert("✅ Sudah dicopy!"));
-        }
-
-        function clearAll() {
-            if (confirm("Hapus semua?")) {
-                document.getElementById('input').value = '';
-                document.getElementById('results').innerHTML = '';
-                document.getElementById('resultSection').classList.add('hidden');
-                document.getElementById('videoContainer').classList.add('hidden');
+            const validLinks = Array.from(document.querySelectorAll('#results a')).map(a => a.href).join('\n');
+            if (validLinks) {
+                navigator.clipboard.writeText(validLinks);
+                alert("✅ Semua link valid sudah dicopy!");
+            } else {
+                alert("Tidak ada link valid untuk dicopy.");
             }
         }
 
-        // Klik sembarang di halaman untuk memastikan popunder siap
-        document.addEventListener('click', () => {
-            if (adShown && !popunderReady) loadPopunder();
-        });
+        function clearAll() {
+            if (confirm("Hapus semua input dan hasil?")) {
+                document.getElementById('input').value = '';
+                document.getElementById('results').innerHTML = '';
+                document.getElementById('resultSection').classList.add('hidden');
+            }
+        }
 
+        // Ctrl + Enter untuk generate
         document.addEventListener('keydown', e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateLinks();
         });
