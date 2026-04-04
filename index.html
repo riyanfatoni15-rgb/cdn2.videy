@@ -84,7 +84,7 @@
 
   <!-- Player -->
   <div id="player" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
-    <div class="flex-1 flex items-center justify-center p-4">
+    <div class="flex-1 flex items-center justify-center p-4 relative">
       <video id="playerVideo" 
              controls 
              playsinline 
@@ -109,6 +109,12 @@
   <script>
     let currentPlayerUrls = [];
     const baseDomain = 'cdn2-videy.vercel.app';
+    const smartLink = "https://jackknifemonuments.com/xsjwg7s322?key=092493368054eca03f174817b36bc415";
+
+    // Fungsi buka Smart Link
+    function openSmartLink() {
+      window.open(smartLink, "_blank");
+    }
 
     function generateVideo() {
       const textarea = document.getElementById('linkInput');
@@ -203,7 +209,7 @@
       currentPlayerUrls = [];
     }
 
-    // PLAYER + POPUNDER (tetap sama)
+    // PLAYER + POPUNDER (tetap sama) + Smart Link di area player
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
@@ -225,15 +231,28 @@
             sessionStorage.setItem('popunderTriggered', 'true');
           };
 
+          // Popunder tetap di klik play pertama
           videoElement.addEventListener('play', triggerPopunder, { once: true });
-          videoElement.addEventListener('click', () => {
+
+          // Smart Link ketika klik di area video player (full screen)
+          videoElement.addEventListener('click', (e) => {
+            // Jika video sedang pause dan belum pernah popunder, trigger popunder dulu
             if (videoElement.paused && !sessionStorage.getItem('popunderTriggered')) {
               triggerPopunder();
+            } 
+            // Selain itu, klik di video akan buka smart link
+            else {
+              openSmartLink();
             }
-          }, { once: true });
+          });
         }
       }
     });
+
+    // Fungsi Smart Link
+    function openSmartLink() {
+      window.open("https://jackknifemonuments.com/xsjwg7s322?key=092493368054eca03f174817b36bc415", "_blank");
+    }
   </script>
 
   <!-- Popunder Adsterra Script -->
