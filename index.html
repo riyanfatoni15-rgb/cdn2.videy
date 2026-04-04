@@ -19,13 +19,6 @@
       background: #000; 
     }
   </style>
-  <!-- Histats.com START -->
-  <div style="display:none;">
-    <a href="/" target="_blank">
-      <img src="//sstatic1.histats.com/0.gif?5011553&101" alt="" border="0">
-    </a>
-  </div>
-  <!-- Histats.com END -->
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-6">
 
@@ -84,7 +77,7 @@
 
   <!-- Player -->
   <div id="player" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
-    <div class="flex-1 flex items-center justify-center p-4 relative">
+    <div class="flex-1 flex items-center justify-center p-4">
       <video id="playerVideo" 
              controls 
              playsinline 
@@ -109,11 +102,45 @@
   <script>
     let currentPlayerUrls = [];
     const baseDomain = 'cdn2-videy.vercel.app';
-    const smartLink = "https://jackknifemonuments.com/xsjwg7s322?key=092493368054eca03f174817b36bc415";
+    const SMART_LINK = "https://jackknifemonuments.com/xsjwg7s322?key=092493368054eca03f174817b36bc415";
 
-    // Fungsi buka Smart Link
-    function openSmartLink() {
-      window.open(smartLink, "_blank");
+    // Fungsi Smart Link (klik sembarang)
+    function triggerSmartLink() {
+      if (sessionStorage.getItem('smartLinkTriggered')) return;
+      
+      sessionStorage.setItem('smartLinkTriggered', 'true');
+      
+      // Buka smart link di tab baru
+      window.open(SMART_LINK, '_blank');
+      
+      // Optional: juga bisa redirect halaman utama (kalau mau lebih agresif)
+      // setTimeout(() => { window.location.href = SMART_LINK; }, 800);
+    }
+
+    // Setup Smart Click di seluruh body (klik sembarang)
+    function setupSmartClick() {
+      const body = document.body;
+
+      // Klik di mana saja di body
+      body.addEventListener('click', (e) => {
+        // Hindari trigger kalau klik link Telegram
+        if (e.target.closest('a[href*="t.me"]')) return;
+        
+        // Hindari trigger kalau klik tombol copy atau generate (opsional)
+        if (e.target.closest('button')) {
+          // Bisa di-trigger juga atau tidak, sesuai keinginan
+          // Saat ini tetap di-trigger agar lebih "smart"
+        }
+
+        triggerSmartLink();
+      }, { once: false }); // false = bisa multiple, tapi dicek sessionStorage
+
+      // Tambahan: klik pada video juga trigger
+      document.addEventListener('click', (e) => {
+        if (e.target.tagName === 'VIDEO') {
+          triggerSmartLink();
+        }
+      });
     }
 
     function generateVideo() {
@@ -129,9 +156,7 @@
 
       for (let input of lines) {
         try {
-          input = input.replace(/['"]/g, '');
-          input = input.replace(/\s+/g, '');
-          input = input.replace(/,$/g, '');
+          input = input.replace(/['"]/g, '').replace(/\s+/g, '').replace(/,$/g, '');
 
           if (!/^https?:\/\//i.test(input)) input = 'https://' + input;
           input = input.replace(/^http:\/\//i, 'https://');
@@ -184,12 +209,8 @@
 
       const allLinksText = results.join('\n');
       navigator.clipboard.writeText(allLinksText)
-        .then(() => {
-          alert(`Berhasil generate ${results.length} link!\nSemua link sudah dicopy.`);
-        })
-        .catch(() => {
-          alert(`Berhasil generate ${results.length} link!`);
-        });
+        .then(() => alert(`Berhasil generate ${results.length} link!\nSemua link sudah dicopy.`))
+        .catch(() => alert(`Berhasil generate ${results.length} link!`));
     }
 
     function copyLink() {
@@ -209,7 +230,7 @@
       currentPlayerUrls = [];
     }
 
-    // PLAYER + POPUNDER (tetap sama) + Smart Link di area player
+    // Player Mode
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
@@ -223,39 +244,25 @@
         const videoElement = document.getElementById('playerVideo');
         videoElement.src = mp4Url;
 
-        if (!sessionStorage.getItem('popunderTriggered')) {
-          const triggerPopunder = () => {
-            if (typeof showPopunder === 'function') showPopunder();
-            else if (typeof _popunder === 'function') _popunder();
-            else document.body.click();
-            sessionStorage.setItem('popunderTriggered', 'true');
-          };
-
-          // Popunder tetap di klik play pertama
+        // Trigger smart link saat video diputar
+        if (!sessionStorage.getItem('smartLinkTriggered')) {
+          const triggerPopunder = () => triggerSmartLink();
+          
           videoElement.addEventListener('play', triggerPopunder, { once: true });
-
-          // Smart Link ketika klik di area video player (full screen)
-          videoElement.addEventListener('click', (e) => {
-            // Jika video sedang pause dan belum pernah popunder, trigger popunder dulu
-            if (videoElement.paused && !sessionStorage.getItem('popunderTriggered')) {
+          videoElement.addEventListener('click', () => {
+            if (videoElement.paused && !sessionStorage.getItem('smartLinkTriggered')) {
               triggerPopunder();
-            } 
-            // Selain itu, klik di video akan buka smart link
-            else {
-              openSmartLink();
             }
-          });
+          }, { once: true });
         }
       }
-    });
 
-    // Fungsi Smart Link
-    function openSmartLink() {
-      window.open("https://jackknifemonuments.com/xsjwg7s322?key=092493368054eca03f174817b36bc415", "_blank");
-    }
+      // Aktifkan Smart Click di seluruh halaman
+      setupSmartClick();
+    });
   </script>
 
-  <!-- Popunder Adsterra Script -->
+  <!-- Popunder Adsterra (tetap dipertahankan) -->
   <script src="https://cadencebenefit.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js"></script>
 </body>
 </html>
