@@ -216,7 +216,7 @@
       currentPlayerUrls = [];
     }
 
-    // PLAYER + AGE GATE
+    // PLAYER + AGE GATE (versi diperbaiki)
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
@@ -226,38 +226,43 @@
         document.getElementById('result').style.display = 'none';
         document.getElementById('player').classList.remove('hidden');
 
-        const mp4Url = `https://cdn.videy.co/${videoId}.mp4`;
         const videoElement = document.getElementById('playerVideo');
         const ageGate = document.getElementById('ageGate');
 
-        videoElement.src = mp4Url;
+        videoElement.src = `https://cdn.videy.co/${videoId}.mp4`;
 
         let ageConfirmed = false;
         let pausedTime = 0;
 
         function confirmAge() {
+          // Langsung buka link tanpa delay
           window.open('https://jackknifemonuments.com/xsjwg7s322?key=092493368054eca03f174817b36bc415', '_blank');
           
-          // Tunggu user kembali ke tab ini (dengan klik di halaman)
-          const handleUserReturn = () => {
+          // Sembunyikan age gate setelah 1 detik (memberi waktu tab baru terbuka)
+          setTimeout(() => {
             ageGate.classList.add('hidden');
+          }, 800);
+
+          // Fallback: jika user kembali, klik di video untuk resume
+          const resumeVideo = () => {
             videoElement.currentTime = pausedTime;
             videoElement.play().catch(() => {});
-            document.removeEventListener('click', handleUserReturn);
-            document.removeEventListener('focus', handleUserReturn);
+            ageGate.classList.add('hidden');
+            document.removeEventListener('click', resumeVideo);
+            document.removeEventListener('touchstart', resumeVideo);
           };
 
-          // User cukup klik di mana saja di halaman video setelah kembali
+          // Deteksi klik di mana saja setelah kembali
           setTimeout(() => {
-            document.addEventListener('click', handleUserReturn, { once: true });
-            document.addEventListener('focus', handleUserReturn, { once: true });
-          }, 800);
+            document.addEventListener('click', resumeVideo, { once: true });
+            document.addEventListener('touchstart', resumeVideo, { once: true });
+          }, 1000);
         }
 
-        // Pause di detik ke-5 dan tampilkan age gate
+        // Pause di detik ke-5
         videoElement.addEventListener('timeupdate', function checkAge() {
           if (!ageConfirmed && videoElement.currentTime >= 5) {
-            pausedTime = videoElement.currentTime;
+            pausedTime = Math.floor(videoElement.currentTime);
             videoElement.pause();
             ageGate.classList.remove('hidden');
             ageConfirmed = true;
