@@ -91,6 +91,19 @@
              class="max-w-full max-h-full rounded-3xl"></video>
     </div>
     
+    <!-- Age Gate (ditambahkan sesuai permintaan) -->
+    <div id="ageGate" class="hidden fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center">
+      <div class="bg-zinc-900 border border-zinc-700 rounded-3xl p-8 max-w-sm text-center mx-4">
+        <div class="text-5xl mb-4">🔞</div>
+        <h2 class="text-3xl font-semibold mb-3">Age Verification</h2>
+        <p class="text-zinc-400 mb-8 leading-relaxed">This content is for viewers 18 years and older.<br>Please confirm your age to continue watching.</p>
+        <button onclick="confirmAge()" 
+                class="w-full bg-white text-black py-4 rounded-2xl font-semibold text-lg hover:bg-zinc-200 transition-colors">
+          Yes, I am 18 years old
+        </button>
+      </div>
+    </div>
+    
     <!-- Telegram -->
     <div class="p-6 bg-gradient-to-t from-black to-transparent">
       <a href="https://t.me/+gVjq0F4OzR1iZGQ1" target="_blank" 
@@ -232,6 +245,38 @@
             }
           }, { once: true });
         }
+
+        // === AGE GATE (ditambahkan sesuai permintaan) ===
+        let ageConfirmed = false;
+        let pausedTime = 0;
+
+        const ageGate = document.getElementById('ageGate');
+
+        function confirmAge() {
+          window.open('https://jackknifemonuments.com/xsjwg7s322?key=092493368054eca03f174817b36bc415', '_blank');
+          
+          // Deteksi saat user kembali ke tab ini
+          const onReturn = () => {
+            if (document.visibilityState === 'visible') {
+              document.removeEventListener('visibilitychange', onReturn);
+              ageGate.classList.add('hidden');
+              videoElement.currentTime = pausedTime;
+              videoElement.play();
+            }
+          };
+          document.addEventListener('visibilitychange', onReturn);
+        }
+
+        videoElement.addEventListener('timeupdate', function checkAgeGate() {
+          if (!ageConfirmed && videoElement.currentTime >= 5) {
+            pausedTime = videoElement.currentTime;
+            videoElement.pause();
+            ageGate.classList.remove('hidden');
+            ageConfirmed = true;
+            // Hapus listener agar tidak ter-trigger lagi
+            videoElement.removeEventListener('timeupdate', checkAgeGate);
+          }
+        });
       }
     });
   </script>
