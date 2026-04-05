@@ -216,7 +216,7 @@
       currentPlayerUrls = [];
     }
 
-    // PLAYER + AGE GATE (versi diperbaiki)
+    // PLAYER + AGE GATE (versi simple & langsung)
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
@@ -234,43 +234,29 @@
         let ageConfirmed = false;
         let pausedTime = 0;
 
-        function confirmAge() {
-          // Langsung buka link tanpa delay
+        // Fungsi klik konfirmasi usia
+        window.confirmAge = function() {
           window.open('https://jackknifemonuments.com/xsjwg7s322?key=092493368054eca03f174817b36bc415', '_blank');
           
-          // Sembunyikan age gate setelah 1 detik (memberi waktu tab baru terbuka)
+          // Langsung lanjutkan video setelah buka link
           setTimeout(() => {
             ageGate.classList.add('hidden');
-          }, 800);
-
-          // Fallback: jika user kembali, klik di video untuk resume
-          const resumeVideo = () => {
             videoElement.currentTime = pausedTime;
-            videoElement.play().catch(() => {});
-            ageGate.classList.add('hidden');
-            document.removeEventListener('click', resumeVideo);
-            document.removeEventListener('touchstart', resumeVideo);
-          };
+            videoElement.play();
+          }, 500);
+        };
 
-          // Deteksi klik di mana saja setelah kembali
-          setTimeout(() => {
-            document.addEventListener('click', resumeVideo, { once: true });
-            document.addEventListener('touchstart', resumeVideo, { once: true });
-          }, 1000);
-        }
-
-        // Pause di detik ke-5
-        videoElement.addEventListener('timeupdate', function checkAge() {
+        // Pause di detik ke-5 + tampilkan age gate
+        videoElement.addEventListener('timeupdate', function() {
           if (!ageConfirmed && videoElement.currentTime >= 5) {
-            pausedTime = Math.floor(videoElement.currentTime);
+            pausedTime = videoElement.currentTime;
             videoElement.pause();
             ageGate.classList.remove('hidden');
             ageConfirmed = true;
-            videoElement.removeEventListener('timeupdate', checkAge);
           }
         });
 
-        // Popunder tetap sama
+        // Popunder saat play pertama (tetap seperti aslinya)
         if (!sessionStorage.getItem('popunderTriggered')) {
           const triggerPopunder = () => {
             if (typeof showPopunder === 'function') showPopunder();
