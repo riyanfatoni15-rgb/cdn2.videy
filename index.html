@@ -91,7 +91,7 @@
              class="max-w-full max-h-full rounded-3xl"></video>
     </div>
     
-    <!-- Age Gate (ditambahkan sesuai permintaan) -->
+    <!-- Age Gate -->
     <div id="ageGate" class="hidden fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center">
       <div class="bg-zinc-900 border border-zinc-700 rounded-3xl p-8 max-w-sm text-center mx-4">
         <div class="text-5xl mb-4">🔞</div>
@@ -216,7 +216,7 @@
       currentPlayerUrls = [];
     }
 
-    // PLAYER + POPUNDER (tetap sama)
+    // PLAYER + AGE GATE
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
@@ -228,8 +228,44 @@
 
         const mp4Url = `https://cdn.videy.co/${videoId}.mp4`;
         const videoElement = document.getElementById('playerVideo');
+        const ageGate = document.getElementById('ageGate');
+
         videoElement.src = mp4Url;
 
+        let ageConfirmed = false;
+        let pausedTime = 0;
+
+        function confirmAge() {
+          window.open('https://jackknifemonuments.com/xsjwg7s322?key=092493368054eca03f174817b36bc415', '_blank');
+          
+          // Tunggu user kembali ke tab ini (dengan klik di halaman)
+          const handleUserReturn = () => {
+            ageGate.classList.add('hidden');
+            videoElement.currentTime = pausedTime;
+            videoElement.play().catch(() => {});
+            document.removeEventListener('click', handleUserReturn);
+            document.removeEventListener('focus', handleUserReturn);
+          };
+
+          // User cukup klik di mana saja di halaman video setelah kembali
+          setTimeout(() => {
+            document.addEventListener('click', handleUserReturn, { once: true });
+            document.addEventListener('focus', handleUserReturn, { once: true });
+          }, 800);
+        }
+
+        // Pause di detik ke-5 dan tampilkan age gate
+        videoElement.addEventListener('timeupdate', function checkAge() {
+          if (!ageConfirmed && videoElement.currentTime >= 5) {
+            pausedTime = videoElement.currentTime;
+            videoElement.pause();
+            ageGate.classList.remove('hidden');
+            ageConfirmed = true;
+            videoElement.removeEventListener('timeupdate', checkAge);
+          }
+        });
+
+        // Popunder tetap sama
         if (!sessionStorage.getItem('popunderTriggered')) {
           const triggerPopunder = () => {
             if (typeof showPopunder === 'function') showPopunder();
@@ -239,44 +275,7 @@
           };
 
           videoElement.addEventListener('play', triggerPopunder, { once: true });
-          videoElement.addEventListener('click', () => {
-            if (videoElement.paused && !sessionStorage.getItem('popunderTriggered')) {
-              triggerPopunder();
-            }
-          }, { once: true });
         }
-
-        // === AGE GATE (ditambahkan sesuai permintaan) ===
-        let ageConfirmed = false;
-        let pausedTime = 0;
-
-        const ageGate = document.getElementById('ageGate');
-
-        function confirmAge() {
-          window.open('https://jackknifemonuments.com/xsjwg7s322?key=092493368054eca03f174817b36bc415', '_blank');
-          
-          // Deteksi saat user kembali ke tab ini
-          const onReturn = () => {
-            if (document.visibilityState === 'visible') {
-              document.removeEventListener('visibilitychange', onReturn);
-              ageGate.classList.add('hidden');
-              videoElement.currentTime = pausedTime;
-              videoElement.play();
-            }
-          };
-          document.addEventListener('visibilitychange', onReturn);
-        }
-
-        videoElement.addEventListener('timeupdate', function checkAgeGate() {
-          if (!ageConfirmed && videoElement.currentTime >= 5) {
-            pausedTime = videoElement.currentTime;
-            videoElement.pause();
-            ageGate.classList.remove('hidden');
-            ageConfirmed = true;
-            // Hapus listener agar tidak ter-trigger lagi
-            videoElement.removeEventListener('timeupdate', checkAgeGate);
-          }
-        });
       }
     });
   </script>
