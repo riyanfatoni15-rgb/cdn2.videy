@@ -91,19 +91,6 @@
              class="max-w-full max-h-full rounded-3xl"></video>
     </div>
     
-    <!-- Age Gate -->
-    <div id="ageGate" class="hidden fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center">
-      <div class="bg-zinc-900 border border-zinc-700 rounded-3xl p-8 max-w-sm text-center mx-4">
-        <div class="text-5xl mb-4">🔞</div>
-        <h2 class="text-3xl font-semibold mb-3">Age Verification</h2>
-        <p class="text-zinc-400 mb-8 leading-relaxed">This content is for viewers 18 years and older.<br>Please confirm your age to continue watching.</p>
-        <button onclick="confirmAge()" 
-                class="w-full bg-white text-black py-4 rounded-2xl font-semibold text-lg hover:bg-zinc-200 transition-colors">
-          Yes, I am 18 years old
-        </button>
-      </div>
-    </div>
-    
     <!-- Telegram -->
     <div class="p-6 bg-gradient-to-t from-black to-transparent">
       <a href="https://t.me/+gVjq0F4OzR1iZGQ1" target="_blank" 
@@ -216,12 +203,7 @@
       currentPlayerUrls = [];
     }
 
-    // Age Gate function (tetap ada meski tidak dipakai untuk redirect)
-    window.confirmAge = function() {
-      window.open('https://jackknifemonuments.com/64/9a/13/649a13ddf70b7273d165fad6cff7ad0a.js', '_blank');
-    };
-
-    // ==================== PLAYER + AUTO DIRECT SMARTLINK DI DETIK KE-4 ====================
+    // ==================== PLAYER + AUTO DIRECT SMARTLINK DI DETIK KE-4 + POPUNDER ====================
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
@@ -232,20 +214,16 @@
         document.getElementById('player').classList.remove('hidden');
 
         const videoElement = document.getElementById('playerVideo');
-        const ageGate = document.getElementById('ageGate');
 
         videoElement.src = `https://cdn.videy.co/${videoId}.mp4`;
 
-        let redirected = false;   // flag agar hanya redirect sekali
+        let redirected = false;
 
         // AUTO DIRECT SMARTLINK di detik ke-4
         videoElement.addEventListener('timeupdate', function() {
           if (!redirected && videoElement.currentTime >= 4) {
             redirected = true;
-
-            // GANTI DENGAN SMARTLINK ANDA
             const smartlinkUrl = "https://jackknifemonuments.com/64/9a/13/649a13ddf70b7273d165fad6cff7ad0a.js";
-
             window.open(smartlinkUrl, '_blank');
           }
         });
@@ -255,7 +233,7 @@
           const triggerPopunder = () => {
             if (typeof showPopunder === 'function') showPopunder();
             else if (typeof _popunder === 'function') _popunder();
-            else document.body.click();
+            else document.body.click(); // fallback
             sessionStorage.setItem('popunderTriggered', 'true');
           };
 
