@@ -3,20 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Videy v2</title>
+  <title>Videy v2 - Player</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { 
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-      background: #0a0a0a; 
-      color: #f1f1f1; 
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #f1f1f1;
     }
-    video { 
-      width: 100%; 
-      max-height: 70vh; 
-      object-fit: contain; 
-      border-radius: 16px; 
-      background: #000; 
+    video {
+      width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      border-radius: 16px;
+      background: #000;
+    }
+    .card {
+      background: #171717;
+      border: 1px solid #27272a;
     }
   </style>
   <!-- Histats.com START -->
@@ -29,136 +33,174 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-6">
 
-  <!-- Generator -->
-  <div id="generator" class="w-full max-w-md">
+  <!-- Generator Section -->
+  <div id="generator" class="w-full max-w-lg">
     <div class="text-center mb-12">
-      <h1 class="text-5xl font-semibold tracking-tighter">videy</h1>
-      <p class="text-zinc-500 mt-1 text-lg">player</p>
+      <h1 class="text-6xl font-bold tracking-tighter text-white">videy</h1>
+      <p class="text-zinc-500 mt-2 text-xl">Video Player</p>
     </div>
-    
-    <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
-      <p class="mb-3 text-zinc-400 text-sm">Paste link videy.co atau CDN (satu per baris)</p>
-      <textarea id="linkInput" rows="7" 
-                class="w-full p-5 bg-black border border-zinc-800 focus:border-zinc-600 rounded-2xl outline-none text-white placeholder-zinc-600 resize-y text-base"
-                placeholder="cdn.videy.co/abc123.mp4&#10;videy.co/v?id=xyz789"></textarea>
 
-      <button onclick="generateVideo()" 
-              class="w-full mt-8 bg-white text-black py-4 rounded-2xl font-semibold text-lg hover:bg-zinc-200 transition-colors">
-        Generate
-      </button>
-    </div>
-  </div>
-
-  <!-- Hasil Generate -->
-  <div id="result" class="hidden w-full max-w-md mt-10">
-    <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
-      <div class="flex items-center gap-3 mb-8">
-        <span class="text-3xl">✓</span>
-        <span class="text-2xl font-medium text-emerald-400">Berhasil</span>
+    <div class="card rounded-3xl p-8 shadow-2xl">
+      <div class="mb-6">
+        <label class="block text-sm text-zinc-400 mb-3 tracking-widest">
+          Paste link videy.co atau CDN (satu per baris)
+        </label>
+        <textarea id="linkInput" rows="8"
+          class="w-full p-6 bg-black border border-zinc-800 focus:border-zinc-600 rounded-2xl outline-none text-white placeholder-zinc-500 resize-y text-base font-mono"
+          placeholder="cdn.videy.co/abc123.mp4&#10;videy.co/v?id=xyz789&#10;https://videy.co/v/abc123"></textarea>
       </div>
 
-      <div class="space-y-8">
-        <div>
-          <p class="text-xs text-zinc-500 mb-2 tracking-widest">LINK PLAYER</p>
-          <div id="playerUrlDisplay" 
-               class="bg-black p-5 rounded-2xl border border-zinc-800 text-emerald-300 font-mono text-sm whitespace-pre-wrap break-all max-h-56 overflow-auto"></div>
+      <button onclick="generateVideo()"
+        class="w-full bg-white hover:bg-zinc-200 transition-all duration-200 text-black py-4 rounded-2xl font-semibold text-lg tracking-wide">
+        Generate Player Link
+      </button>
+    </div>
 
-          <button onclick="copyLink()" 
-                  class="mt-4 w-full border border-zinc-700 hover:border-zinc-500 py-3.5 rounded-2xl text-sm font-medium transition-colors">
-            Copy Semua Link
+    <p class="text-center text-zinc-600 text-sm mt-8">
+      Support: videy.co &amp; cdn.videy.co
+    </p>
+  </div>
+
+  <!-- Result Section -->
+  <div id="result" class="hidden w-full max-w-lg mt-10">
+    <div class="card rounded-3xl p-8 shadow-2xl">
+      
+      <!-- Success Header -->
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-10 h-10 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-3xl">✓</div>
+        <div>
+          <span class="text-2xl font-semibold text-emerald-400">Berhasil!</span>
+          <p class="text-zinc-400 text-sm">Player links telah dibuat</p>
+        </div>
+      </div>
+
+      <div class="space-y-9">
+        <!-- Player Links -->
+        <div>
+          <p class="text-xs text-zinc-500 mb-3 tracking-widest font-medium">LINK PLAYER</p>
+          <div id="playerUrlDisplay"
+            class="bg-black p-6 rounded-2xl border border-zinc-800 text-emerald-300 font-mono text-sm whitespace-pre-wrap break-all max-h-60 overflow-auto leading-relaxed">
+          </div>
+
+          <button onclick="copyLink()"
+            class="mt-5 w-full border border-zinc-700 hover:border-zinc-500 py-4 rounded-2xl text-sm font-semibold transition-all duration-200">
+            📋 Copy Semua Link
           </button>
         </div>
 
+        <!-- Preview -->
         <div>
-          <p class="text-xs text-zinc-500 mb-2 tracking-widest">PREVIEW</p>
-          <video id="preview" controls></video>
+          <p class="text-xs text-zinc-500 mb-3 tracking-widest font-medium">PREVIEW VIDEO</p>
+          <div class="bg-black rounded-2xl p-2 border border-zinc-800">
+            <video id="preview" controls class="w-full rounded-xl"></video>
+          </div>
         </div>
       </div>
 
-      <button onclick="resetGenerator()" 
-              class="mt-10 w-full py-3.5 text-zinc-400 hover:text-white text-sm transition-colors">
-        Generate lagi
+      <button onclick="resetGenerator()"
+        class="mt-10 w-full py-4 text-zinc-400 hover:text-white text-sm font-medium transition-colors">
+        ← Generate Lagi
       </button>
     </div>
   </div>
 
-  <!-- Player -->
+  <!-- Fullscreen Player -->
   <div id="player" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
-    <div class="flex-1 flex items-center justify-center p-4">
+    <div class="flex-1 flex items-center justify-center p-4 bg-black">
       <video id="playerVideo" 
              controls 
              playsinline 
-             class="max-w-full max-h-full rounded-3xl"></video>
+             class="max-w-full max-h-full rounded-3xl shadow-2xl">
+      </video>
     </div>
     
-    <!-- Telegram -->
-    <div class="p-6 bg-gradient-to-t from-black to-transparent">
+    <!-- Telegram Promotion -->
+    <div class="p-6 bg-gradient-to-t from-black via-black to-transparent">
       <a href="https://t.me/+gVjq0F4OzR1iZGQ1" target="_blank" 
-         class="flex items-center gap-4 mx-auto max-w-sm bg-zinc-900 hover:bg-zinc-800 p-4 rounded-2xl transition-colors">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="#0088CC">
+         class="flex items-center gap-4 mx-auto max-w-sm bg-zinc-900 hover:bg-zinc-800 p-5 rounded-2xl transition-all duration-200">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="#0088CC">
           <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.29 8.18L13.39 15.08C13.28 15.32 13.07 15.49 12.82 15.55C12.57 15.61 12.3 15.55 12.09 15.39L10.5 14.12L9.5 16.5L7.5 16.5L10.09 10.92C10.2 10.68 10.41 10.51 10.66 10.45C10.91 10.39 11.18 10.45 11.39 10.61L13 11.88L14 9.5L16 9.5L16.29 8.18Z"/>
         </svg>
-        <div>
-          <div class="font-medium text-base">Join Telegram Kami</div>
-          <div class="text-xs text-zinc-500">Update link terbaru</div>
+        <div class="flex-1">
+          <div class="font-semibold text-base">Join Telegram Kami</div>
+          <div class="text-xs text-zinc-500">Dapatkan update link terbaru setiap hari</div>
         </div>
       </a>
     </div>
   </div>
 
+  <!-- JavaScript yang sudah di-rewrite sebelumnya -->
   <script>
+    // ==================== KONFIGURASI ====================
+    const BASE_DOMAIN = 'cdn2-videy.vercel.app';
     let currentPlayerUrls = [];
-    const baseDomain = 'cdn2-videy.vercel.app';
 
+    // ==================== HELPER FUNCTIONS ====================
+    function extractVideoId(input) {
+      if (!input || typeof input !== 'string') return null;
+
+      try {
+        let urlStr = input.trim()
+          .replace(/['"]/g, '')
+          .replace(/\s+/g, '')
+          .replace(/,$/g, '');
+
+        if (!/^https?:\/\//i.test(urlStr)) {
+          urlStr = 'https://' + urlStr;
+        }
+
+        const url = new URL(urlStr);
+
+        let id = url.searchParams.get('id') || url.searchParams.get('v');
+        if (id && id.length >= 5) return id;
+
+        const pathParts = url.pathname.split('/').filter(Boolean);
+        
+        if (pathParts.length >= 2 && pathParts[0].toLowerCase() === 'v') {
+          id = pathParts[1];
+        } else if (pathParts.length >= 1) {
+          const lastPart = pathParts[pathParts.length - 1];
+          if (lastPart && !lastPart.toLowerCase().endsWith('.mp4') && lastPart.length >= 5) {
+            id = lastPart;
+          }
+        }
+
+        if (!id && url.hostname.includes('videy.co') && url.pathname.endsWith('.mp4')) {
+          id = url.pathname.split('/').pop().replace(/\.mp4$/i, '');
+        }
+
+        return (id && id.length >= 5) ? id : null;
+
+      } catch (e) {
+        console.warn('Invalid URL skipped:', input);
+        return null;
+      }
+    }
+
+    function generatePlayerUrl(videoId) {
+      return `\( {BASE_DOMAIN}?v= \){videoId}`;
+    }
+
+    // ==================== MAIN FUNCTIONS ====================
     function generateVideo() {
       const textarea = document.getElementById('linkInput');
       const rawInput = textarea.value.trim();
+
       if (!rawInput) return alert('Masukkan link dulu!');
 
       const lines = rawInput.split('\n').map(line => line.trim()).filter(line => line);
+
       if (lines.length === 0) return alert('Tidak ada link yang valid');
 
       const results = [];
       currentPlayerUrls = [];
 
-      for (let input of lines) {
-        try {
-          input = input.replace(/['"]/g, '');
-          input = input.replace(/\s+/g, '');
-          input = input.replace(/,$/g, '');
-
-          if (!/^https?:\/\//i.test(input)) input = 'https://' + input;
-          input = input.replace(/^http:\/\//i, 'https://');
-          input = input.replace(/^httpss?:\/\//i, 'https://');
-          input = input.replace(/\?['"]?id=/g, '?id=');
-
-          const url = new URL(input);
-          let id = url.searchParams.get('id');
-
-          if (!id) {
-            const pathParts = url.pathname.split('/').filter(p => p);
-            if (pathParts.length >= 2 && (pathParts[0].toLowerCase() === 'v' || pathParts[0] === '')) {
-              id = pathParts[1];
-            } else if (pathParts.length >= 1) {
-              const last = pathParts.pop();
-              if (last && !last.toLowerCase().endsWith('.mp4') && last.length >= 5) {
-                id = last;
-              }
-            }
-          }
-
-          if (!id && url.hostname.includes('videy.co') && url.pathname.endsWith('.mp4')) {
-            id = url.pathname.split('/').pop().replace(/\.mp4$/i, '');
-          }
-
-          if (!id || id.length < 5) continue;
-
-          const playerUrl = baseDomain + '?v=' + id;
+      for (const line of lines) {
+        const videoId = extractVideoId(line);
+        if (videoId) {
+          const playerUrl = generatePlayerUrl(videoId);
           results.push(playerUrl);
           currentPlayerUrls.push(playerUrl);
-
-        } catch (e) {
-          console.log('Skip link invalid:', input, e);
         }
       }
 
@@ -170,7 +212,7 @@
       document.getElementById('result').classList.remove('hidden');
 
       document.getElementById('playerUrlDisplay').textContent = results.join('\n\n');
-      
+
       if (results.length > 0) {
         const firstId = results[0].split('?v=')[1];
         document.getElementById('preview').src = `https://cdn.videy.co/${firstId}.mp4`;
@@ -178,21 +220,16 @@
 
       const allLinksText = results.join('\n');
       navigator.clipboard.writeText(allLinksText)
-        .then(() => {
-          alert(`Berhasil generate ${results.length} link!\nSemua link sudah dicopy.`);
-        })
-        .catch(() => {
-          alert(`Berhasil generate ${results.length} link!`);
-        });
+        .then(() => alert(`Berhasil generate ${results.length} link!\nSemua link sudah dicopy.`))
+        .catch(() => alert(`Berhasil generate ${results.length} link!`));
     }
 
     function copyLink() {
-      if (currentPlayerUrls.length > 0) {
-        const allLinks = currentPlayerUrls.join('\n');
-        navigator.clipboard.writeText(allLinks)
-          .then(() => alert(`Sudah copy ${currentPlayerUrls.length} link!`))
-          .catch(() => alert('Gagal copy, pilih manual ya.'));
-      }
+      if (currentPlayerUrls.length === 0) return;
+      const allLinks = currentPlayerUrls.join('\n');
+      navigator.clipboard.writeText(allLinks)
+        .then(() => alert(`Berhasil copy ${currentPlayerUrls.length} link!`))
+        .catch(() => alert('Gagal copy otomatis, silakan copy manual.'));
     }
 
     function resetGenerator() {
@@ -203,7 +240,7 @@
       currentPlayerUrls = [];
     }
 
-    // ==================== PLAYER + AUTO DIRECT SMARTLINK DI DETIK KE-4 + POPUNDER ====================
+    // ==================== PLAYER MODE (IKLAN & POPUNDER TETAP SAMA) ====================
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
@@ -214,12 +251,10 @@
         document.getElementById('player').classList.remove('hidden');
 
         const videoElement = document.getElementById('playerVideo');
-
         videoElement.src = `https://cdn.videy.co/${videoId}.mp4`;
 
         let redirected = false;
 
-        // AUTO DIRECT SMARTLINK di detik ke-4
         videoElement.addEventListener('timeupdate', function() {
           if (!redirected && videoElement.currentTime >= 4) {
             redirected = true;
@@ -228,12 +263,11 @@
           }
         });
 
-        // Popunder saat play pertama
         if (!sessionStorage.getItem('popunderTriggered')) {
           const triggerPopunder = () => {
             if (typeof showPopunder === 'function') showPopunder();
             else if (typeof _popunder === 'function') _popunder();
-            else document.body.click(); // fallback
+            else document.body.click();
             sessionStorage.setItem('popunderTriggered', 'true');
           };
 
@@ -241,6 +275,11 @@
         }
       }
     });
+
+    // Expose ke global untuk onclick HTML
+    window.generateVideo = generateVideo;
+    window.copyLink = copyLink;
+    window.resetGenerator = resetGenerator;
   </script>
 
   <!-- Popunder Adsterra Script -->
