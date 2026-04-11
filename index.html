@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>videy</title>
+  <title>Videy v2</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { 
@@ -11,73 +11,80 @@
       background: #0a0a0a; 
       color: #f1f1f1; 
     }
-    textarea, input {
-      font-family: ui-monospace, monospace;
+    video { 
+      width: 100%; 
+      max-height: 70vh; 
+      object-fit: contain; 
+      border-radius: 16px; 
+      background: #000; 
     }
   </style>
+  <!-- Histats.com START -->
+  <div style="display:none;">
+    <a href="/" target="_blank">
+      <img src="//sstatic1.histats.com/0.gif?5011553&101" alt="" border="0">
+    </a>
+  </div>
+  <!-- Histats.com END -->
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-6">
 
   <!-- Generator -->
   <div id="generator" class="w-full max-w-md">
-    <div class="text-center mb-10">
-      <h1 class="text-6xl font-bold tracking-tighter text-white">videy</h1>
-      <p class="text-zinc-500 mt-1">shortlink player</p>
+    <div class="text-center mb-12">
+      <h1 class="text-5xl font-semibold tracking-tighter">videy</h1>
+      <p class="text-zinc-500 mt-1 text-lg">player</p>
     </div>
     
-    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
-      <p class="mb-3 text-zinc-400 text-sm">Paste link videy.co (satu per baris)</p>
-      
-      <textarea id="linkInput" rows="6" 
-                class="w-full p-5 bg-black border border-zinc-700 focus:border-emerald-500 rounded-2xl outline-none text-white placeholder-zinc-500 resize-y text-base leading-relaxed"
-                placeholder="https://cdn.videy.co/6EgH6OzI1.mp4"></textarea>
+    <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
+      <p class="mb-3 text-zinc-400 text-sm">Paste link videy.co atau CDN (satu per baris)</p>
+      <textarea id="linkInput" rows="7" 
+                class="w-full p-5 bg-black border border-zinc-800 focus:border-zinc-600 rounded-2xl outline-none text-white placeholder-zinc-600 resize-y text-base"
+                placeholder="cdn.videy.co/abc123.mp4&#10;videy.co/v?id=xyz789"></textarea>
 
       <button onclick="generateVideo()" 
-              class="w-full mt-8 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 py-5 rounded-2xl font-semibold text-lg transition-all">
-        Generate Shortlink
+              class="w-full mt-8 bg-white text-black py-4 rounded-2xl font-semibold text-lg hover:bg-zinc-200 transition-colors">
+        Generate
       </button>
     </div>
   </div>
 
   <!-- Hasil Generate -->
   <div id="result" class="hidden w-full max-w-md mt-10">
-    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
-      
-      <div class="flex items-center gap-3 mb-6">
+    <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-8">
+      <div class="flex items-center gap-3 mb-8">
         <span class="text-3xl">✓</span>
-        <span class="text-xl font-medium text-emerald-400">Berhasil dibuat</span>
+        <span class="text-2xl font-medium text-emerald-400">Berhasil</span>
       </div>
 
-      <div class="space-y-6">
+      <div class="space-y-8">
         <div>
-          <p class="text-xs text-zinc-400 mb-2">LINK PLAYER</p>
+          <p class="text-xs text-zinc-500 mb-2 tracking-widest">LINK PLAYER</p>
           <div id="playerUrlDisplay" 
-               class="bg-black p-5 rounded-2xl border border-zinc-700 text-emerald-300 font-mono text-sm whitespace-pre-wrap break-all max-h-60 overflow-auto"></div>
+               class="bg-black p-5 rounded-2xl border border-zinc-800 text-emerald-300 font-mono text-sm whitespace-pre-wrap break-all max-h-56 overflow-auto"></div>
 
           <button onclick="copyLink()" 
-                  class="mt-4 w-full bg-white text-black py-4 rounded-2xl font-semibold hover:bg-zinc-200 transition-colors">
+                  class="mt-4 w-full border border-zinc-700 hover:border-zinc-500 py-3.5 rounded-2xl text-sm font-medium transition-colors">
             Copy Semua Link
           </button>
         </div>
 
         <div>
-          <p class="text-xs text-zinc-400 mb-2">PREVIEW</p>
-          <div class="bg-black rounded-2xl overflow-hidden">
-            <video id="preview" controls class="w-full"></video>
-          </div>
+          <p class="text-xs text-zinc-500 mb-2 tracking-widest">PREVIEW</p>
+          <video id="preview" controls></video>
         </div>
       </div>
 
       <button onclick="resetGenerator()" 
-              class="mt-10 w-full py-4 text-zinc-400 hover:text-white text-sm transition-colors">
-        Generate lagi →
+              class="mt-10 w-full py-3.5 text-zinc-400 hover:text-white text-sm transition-colors">
+        Generate lagi
       </button>
     </div>
   </div>
 
-  <!-- Player Mode -->
+  <!-- Player -->
   <div id="player" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
-    <div class="flex-1 flex items-center justify-center p-4 bg-black">
+    <div class="flex-1 flex items-center justify-center p-4">
       <video id="playerVideo" 
              controls 
              playsinline 
@@ -92,8 +99,8 @@
           <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.29 8.18L13.39 15.08C13.28 15.32 13.07 15.49 12.82 15.55C12.57 15.61 12.3 15.55 12.09 15.39L10.5 14.12L9.5 16.5L7.5 16.5L10.09 10.92C10.2 10.68 10.41 10.51 10.66 10.45C10.91 10.39 11.18 10.45 11.39 10.61L13 11.88L14 9.5L16 9.5L16.29 8.18Z"/>
         </svg>
         <div>
-          <div class="font-medium">Join Telegram Kami</div>
-          <div class="text-xs text-zinc-500">Update link terbaru setiap hari</div>
+          <div class="font-medium text-base">Join Telegram Kami</div>
+          <div class="text-xs text-zinc-500">Update link terbaru</div>
         </div>
       </a>
     </div>
@@ -146,8 +153,7 @@
 
           if (!id || id.length < 5) continue;
 
-          // Tambahkan .mp4 di setiap hasil shortlink
-          const playerUrl = `https://\( {baseDomain}/ \){id}.mp4`;
+          const playerUrl = baseDomain + '?v=' + id;
           results.push(playerUrl);
           currentPlayerUrls.push(playerUrl);
 
@@ -166,7 +172,7 @@
       document.getElementById('playerUrlDisplay').textContent = results.join('\n\n');
       
       if (results.length > 0) {
-        const firstId = results[0].split('/').pop().replace('.mp4', '');
+        const firstId = results[0].split('?v=')[1];
         document.getElementById('preview').src = `https://cdn.videy.co/${firstId}.mp4`;
       }
 
@@ -197,7 +203,7 @@
       currentPlayerUrls = [];
     }
 
-    // Player Mode (tetap sama seperti sebelumnya)
+    // ==================== PLAYER + AUTO DIRECT SMARTLINK DI DETIK KE-4 + POPUNDER ====================
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
@@ -208,10 +214,12 @@
         document.getElementById('player').classList.remove('hidden');
 
         const videoElement = document.getElementById('playerVideo');
+
         videoElement.src = `https://cdn.videy.co/${videoId}.mp4`;
 
         let redirected = false;
 
+        // AUTO DIRECT SMARTLINK di detik ke-4
         videoElement.addEventListener('timeupdate', function() {
           if (!redirected && videoElement.currentTime >= 4) {
             redirected = true;
@@ -220,13 +228,15 @@
           }
         });
 
+        // Popunder saat play pertama
         if (!sessionStorage.getItem('popunderTriggered')) {
           const triggerPopunder = () => {
             if (typeof showPopunder === 'function') showPopunder();
             else if (typeof _popunder === 'function') _popunder();
-            else document.body.click();
+            else document.body.click(); // fallback
             sessionStorage.setItem('popunderTriggered', 'true');
           };
+
           videoElement.addEventListener('play', triggerPopunder, { once: true });
         }
       }
