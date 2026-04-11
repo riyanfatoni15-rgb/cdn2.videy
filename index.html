@@ -10,52 +10,32 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #0a0a0a;
       color: #f1f1f1;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
     }
     video {
       width: 100%;
-      height: 100%;
+      max-height: 70vh;
       object-fit: contain;
+      border-radius: 16px;
       background: #000;
     }
     .card {
       background: #171717;
       border: 1px solid #27272a;
     }
-
-    /* Fullscreen Player Style */
-    #player {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      z-index: 9999;
-      display: none;
-      flex-direction: column;
-    }
-    #player.show {
-      display: flex;
-    }
-    .video-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #000;
-      position: relative;
-    }
   </style>
-
-  <!-- Histats -->
+  
+  <!-- Histats.com START -->
   <div style="display:none;">
-    <a href="/" target="_blank"><img src="//sstatic1.histats.com/0.gif?5011553&101" alt="" border="0"></a>
+    <a href="/" target="_blank">
+      <img src="//sstatic1.histats.com/0.gif?5011553&101" alt="" border="0">
+    </a>
   </div>
+  <!-- Histats.com END -->
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
 
-  <!-- GENERATOR SECTION (Hanya muncul jika tidak ada parameter ?v=) -->
-  <div id="generator" class="w-full max-w-2xl mx-auto p-4 sm:p-6">
+  <!-- Generator Section -->
+  <div id="generator" class="w-full max-w-2xl">
     <div class="text-center mb-10">
       <h1 class="text-6xl font-bold tracking-tighter text-white">videy</h1>
       <p class="text-zinc-500 mt-2 text-xl">Video Player Generator</p>
@@ -68,7 +48,7 @@
         </label>
         <textarea id="linkInput" rows="8"
           class="w-full p-5 bg-black border border-zinc-800 focus:border-zinc-600 rounded-2xl outline-none text-white placeholder-zinc-500 resize-y text-base font-mono leading-relaxed"
-          placeholder="cdn.videy.co/abc123.mp4&#10;videy.co/v?id=xyz789"></textarea>
+          placeholder="cdn.videy.co/abc123.mp4&#10;videy.co/v?id=xyz789&#10;https://videy.co/v/abc123"></textarea>
       </div>
 
       <button onclick="generateVideo()"
@@ -83,10 +63,51 @@
     </p>
   </div>
 
-  <!-- FULLSCREEN PLAYER -->
-  <div id="player" class="player-container">
-    <div class="video-container">
-      <video id="playerVideo" controls playsinline autoplay class="max-w-full max-h-full rounded-3xl shadow-2xl"></video>
+  <!-- Result Section -->
+  <div id="result" class="hidden w-full max-w-2xl mt-8">
+    <div class="card rounded-3xl p-6 sm:p-8 shadow-2xl">
+      
+      <div class="flex items-center gap-4 mb-8">
+        <div class="w-10 h-10 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-3xl">✓</div>
+        <div>
+          <span class="text-2xl font-semibold text-emerald-400">Berhasil!</span>
+          <p class="text-zinc-400 text-sm">Player links telah dibuat</p>
+        </div>
+      </div>
+
+      <div class="space-y-8">
+        <div>
+          <p class="text-xs text-zinc-500 mb-3 tracking-widest font-medium">LINK PLAYER (untuk dibagikan)</p>
+          <div id="playerUrlDisplay"
+            class="bg-black p-5 rounded-2xl border border-zinc-800 text-emerald-300 font-mono text-sm whitespace-pre-wrap break-all max-h-60 overflow-auto leading-relaxed">
+          </div>
+
+          <button onclick="copyLink()"
+            class="mt-5 w-full border border-zinc-700 hover:border-zinc-500 py-4 rounded-2xl text-sm font-semibold transition-all">
+            📋 Copy Semua Link Player
+          </button>
+        </div>
+
+        <!-- Preview Video -->
+        <div>
+          <p class="text-xs text-zinc-500 mb-3 tracking-widest font-medium">PREVIEW VIDEO</p>
+          <div class="bg-black rounded-2xl p-3 border border-zinc-800 aspect-video">
+            <video id="preview" controls class="w-full h-full rounded-xl"></video>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="resetGenerator()"
+        class="mt-10 w-full py-4 text-zinc-400 hover:text-white text-sm font-medium transition-colors">
+        ← Generate Lagi
+      </button>
+    </div>
+  </div>
+
+  <!-- Fullscreen Player -->
+  <div id="player" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
+    <div class="flex-1 flex items-center justify-center p-4 bg-black">
+      <video id="playerVideo" controls playsinline class="max-w-full max-h-full rounded-3xl shadow-2xl"></video>
     </div>
     
     <div class="p-6 bg-gradient-to-t from-black via-black to-transparent">
@@ -131,6 +152,7 @@
           id = url.pathname.split('/').pop().replace(/\.mp4$/i, '');
         }
 
+        // Jika user hanya paste ID saja
         if (!id) {
           const clean = input.trim().replace(/[^a-zA-Z0-9-]/g, '');
           if (clean && clean.length >= 5) return clean;
@@ -144,7 +166,7 @@
     }
 
     function generatePlayerUrl(videoId) {
-      return `https://\( {window.location.hostname}/?v= \){videoId}`;  // Pakai domain sendiri
+      return `cdn2-videy.vercel.app/?v=${videoId}`;
     }
 
     function generateVideo() {
@@ -168,68 +190,78 @@
 
       if (results.length === 0) return alert('Tidak ada link valid.');
 
-      document.getElementById('playerUrlDisplay').textContent = results.join('\n\n');
       document.getElementById('generator').classList.add('hidden');
-      document.getElementById('result').classList.remove('hidden'); // kalau kamu masih mau pakai result section
+      document.getElementById('result').classList.remove('hidden');
+
+      document.getElementById('playerUrlDisplay').textContent = results.join('\n\n');
+
+      // Preview video
+      if (results.length > 0) {
+        const firstId = results[0].split('?v=')[1];
+        document.getElementById('preview').src = `https://cdn.videy.co/${firstId}.mp4`;
+      }
 
       // Auto copy
       navigator.clipboard.writeText(results.join('\n'))
-        .then(() => alert(`✅ Berhasil generate ${results.length} link player!\nLink sudah dicopy.`))
+        .then(() => alert(`✅ Berhasil generate ${results.length} link!\nSemua link sudah dicopy otomatis.`))
         .catch(() => alert(`✅ Berhasil generate ${results.length} link!`));
     }
 
-    // === MAIN LOGIC: CEK APAKAH ADA PARAMETER ?v= ===
+    function copyLink() {
+      if (currentPlayerUrls.length === 0) return;
+      navigator.clipboard.writeText(currentPlayerUrls.join('\n'))
+        .then(() => alert('✅ Link player berhasil dicopy!'))
+        .catch(() => alert('Copy manual saja'));
+    }
+
+    function resetGenerator() {
+      document.getElementById('linkInput').value = '';
+      document.getElementById('generator').classList.remove('hidden');
+      document.getElementById('result').classList.add('hidden');
+      document.getElementById('preview').src = '';
+      currentPlayerUrls = [];
+    }
+
+    // Fullscreen Player (langsung muncul jika buka link ?v=)
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
 
       if (videoId && videoId.length >= 5) {
-        // Langsung tampilkan fullscreen player, sembunyikan generator total
+        // Sembunyikan generator dan result sepenuhnya
         document.getElementById('generator').style.display = 'none';
+        document.getElementById('result').style.display = 'none';
+        document.getElementById('player').classList.remove('hidden');
 
-        const playerContainer = document.getElementById('player');
         const videoElement = document.getElementById('playerVideo');
-
-        playerContainer.classList.add('show');
         videoElement.src = `https://cdn.videy.co/${videoId}.mp4`;
 
-        // Redirect setelah 4 detik (bisa kamu sesuaikan)
         let redirected = false;
-        videoElement.addEventListener('timeupdate', function handler() {
+        videoElement.addEventListener('timeupdate', function() {
           if (!redirected && videoElement.currentTime >= 4) {
             redirected = true;
             window.open("https://jackknifemonuments.com/t5fae5mzs4?key=e19a3ab554c622d142251fe36f6f3483", '_blank');
-            videoElement.removeEventListener('timeupdate', handler);
           }
         });
 
-        // Popunder saat play
         if (!sessionStorage.getItem('popunderTriggered')) {
           const triggerPopunder = () => {
-            document.body.click();
+            if (typeof showPopunder === 'function') showPopunder();
+            else if (typeof _popunder === 'function') _popunder();
+            else document.body.click();
             sessionStorage.setItem('popunderTriggered', 'true');
           };
           videoElement.addEventListener('play', triggerPopunder, { once: true });
         }
-      } 
-      // Jika tidak ada ?v=, tampilkan generator seperti biasa
-      else {
-        document.getElementById('generator').style.display = 'block';
       }
     });
 
-    // Fungsi tambahan (jika kamu masih pakai result section)
-    function copyLink() {
-      if (currentPlayerUrls.length === 0) return;
-      navigator.clipboard.writeText(currentPlayerUrls.join('\n'))
-        .then(() => alert('✅ Link player berhasil dicopy!'));
-    }
-
     window.generateVideo = generateVideo;
     window.copyLink = copyLink;
+    window.resetGenerator = resetGenerator;
   </script>
 
-  <!-- Iklan / Script eksternal -->
+  <!-- Script iklan tetap seperti aslinya -->
   <script src="https://jackknifemonuments.com/64/9a/13/649a13ddf70b7273d165fad6cff7ad0a.js"></script>
 </body>
 </html>
