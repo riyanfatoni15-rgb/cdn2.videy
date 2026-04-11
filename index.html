@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Videy v2 - Player</title>
+  <title>Videy Player</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
@@ -23,6 +23,7 @@
       border: 1px solid #27272a;
     }
   </style>
+  
   <!-- Histats.com START -->
   <div style="display:none;">
     <a href="/" target="_blank">
@@ -31,23 +32,23 @@
   </div>
   <!-- Histats.com END -->
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-6">
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
 
   <!-- Generator Section -->
-  <div id="generator" class="w-full max-w-lg">
-    <div class="text-center mb-12">
+  <div id="generator" class="w-full max-w-md sm:max-w-lg">
+    <div class="text-center mb-10">
       <h1 class="text-6xl font-bold tracking-tighter text-white">videy</h1>
       <p class="text-zinc-500 mt-2 text-xl">Video Player</p>
     </div>
 
-    <div class="card rounded-3xl p-8 shadow-2xl">
+    <div class="card rounded-3xl p-6 sm:p-8 shadow-2xl">
       <div class="mb-6">
         <label class="block text-sm text-zinc-400 mb-3 tracking-widest">
           Paste link videy.co atau CDN (satu per baris)
         </label>
         <textarea id="linkInput" rows="8"
-          class="w-full p-6 bg-black border border-zinc-800 focus:border-zinc-600 rounded-2xl outline-none text-white placeholder-zinc-500 resize-y text-base font-mono"
-          placeholder="cdn.videy.co/abc123.mp4&#10;videy.co/v?id=xyz789&#10;https://videy.co/v/abc123"></textarea>
+          class="w-full p-5 bg-black border border-zinc-800 focus:border-zinc-600 rounded-2xl outline-none text-white placeholder-zinc-500 resize-y text-base font-mono"
+          placeholder="cdn.videy.co/abc123.mp4&#10;videy.co/v?id=xyz789"></textarea>
       </div>
 
       <button onclick="generateVideo()"
@@ -62,10 +63,9 @@
   </div>
 
   <!-- Result Section -->
-  <div id="result" class="hidden w-full max-w-lg mt-10">
-    <div class="card rounded-3xl p-8 shadow-2xl">
+  <div id="result" class="hidden w-full max-w-md sm:max-w-lg mt-8">
+    <div class="card rounded-3xl p-6 sm:p-8 shadow-2xl">
       
-      <!-- Success Header -->
       <div class="flex items-center gap-4 mb-8">
         <div class="w-10 h-10 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-3xl">✓</div>
         <div>
@@ -74,16 +74,16 @@
         </div>
       </div>
 
-      <div class="space-y-9">
+      <div class="space-y-8">
         <!-- Player Links -->
         <div>
           <p class="text-xs text-zinc-500 mb-3 tracking-widest font-medium">LINK PLAYER</p>
           <div id="playerUrlDisplay"
-            class="bg-black p-6 rounded-2xl border border-zinc-800 text-emerald-300 font-mono text-sm whitespace-pre-wrap break-all max-h-60 overflow-auto leading-relaxed">
+            class="bg-black p-5 rounded-2xl border border-zinc-800 text-emerald-300 font-mono text-sm whitespace-pre-wrap break-all max-h-60 overflow-auto leading-relaxed">
           </div>
 
           <button onclick="copyLink()"
-            class="mt-5 w-full border border-zinc-700 hover:border-zinc-500 py-4 rounded-2xl text-sm font-semibold transition-all duration-200">
+            class="mt-5 w-full border border-zinc-700 hover:border-zinc-500 py-4 rounded-2xl text-sm font-semibold transition-all">
             📋 Copy Semua Link
           </button>
         </div>
@@ -91,7 +91,7 @@
         <!-- Preview -->
         <div>
           <p class="text-xs text-zinc-500 mb-3 tracking-widest font-medium">PREVIEW VIDEO</p>
-          <div class="bg-black rounded-2xl p-2 border border-zinc-800">
+          <div class="bg-black rounded-2xl p-3 border border-zinc-800">
             <video id="preview" controls class="w-full rounded-xl"></video>
           </div>
         </div>
@@ -129,16 +129,12 @@
     </div>
   </div>
 
-  <!-- JavaScript yang sudah di-rewrite sebelumnya -->
   <script>
-    // ==================== KONFIGURASI ====================
-    const BASE_DOMAIN = 'cdn2-videy.vercel.app';
     let currentPlayerUrls = [];
 
-    // ==================== HELPER FUNCTIONS ====================
+    // Parse Video ID
     function extractVideoId(input) {
       if (!input || typeof input !== 'string') return null;
-
       try {
         let urlStr = input.trim()
           .replace(/['"]/g, '')
@@ -150,8 +146,8 @@
         }
 
         const url = new URL(urlStr);
-
         let id = url.searchParams.get('id') || url.searchParams.get('v');
+
         if (id && id.length >= 5) return id;
 
         const pathParts = url.pathname.split('/').filter(Boolean);
@@ -170,26 +166,22 @@
         }
 
         return (id && id.length >= 5) ? id : null;
-
       } catch (e) {
-        console.warn('Invalid URL skipped:', input);
         return null;
       }
     }
 
+    // PERUBAHAN SESUAI PERMINTAAN:
+    // Tanpa https:// dan ditambah .mp4 di akhir
     function generatePlayerUrl(videoId) {
-      return `\( {BASE_DOMAIN}?v= \){videoId}`;
+      return `cdn2-videy.vercel.app/?v=${videoId}.mp4`;
     }
 
-    // ==================== MAIN FUNCTIONS ====================
     function generateVideo() {
-      const textarea = document.getElementById('linkInput');
-      const rawInput = textarea.value.trim();
-
+      const rawInput = document.getElementById('linkInput').value.trim();
       if (!rawInput) return alert('Masukkan link dulu!');
 
-      const lines = rawInput.split('\n').map(line => line.trim()).filter(line => line);
-
+      const lines = rawInput.split('\n').map(l => l.trim()).filter(l => l);
       if (lines.length === 0) return alert('Tidak ada link yang valid');
 
       const results = [];
@@ -205,7 +197,7 @@
       }
 
       if (results.length === 0) {
-        return alert('Tidak ada link yang valid. Pastikan formatnya benar.');
+        return alert('Tidak ada link valid. Pastikan format link videy.co benar.');
       }
 
       document.getElementById('generator').classList.add('hidden');
@@ -213,23 +205,23 @@
 
       document.getElementById('playerUrlDisplay').textContent = results.join('\n\n');
 
+      // Preview video pertama
       if (results.length > 0) {
-        const firstId = results[0].split('?v=')[1];
+        const firstId = results[0].split('?v=')[1].replace('.mp4', '');
         document.getElementById('preview').src = `https://cdn.videy.co/${firstId}.mp4`;
       }
 
-      const allLinksText = results.join('\n');
-      navigator.clipboard.writeText(allLinksText)
-        .then(() => alert(`Berhasil generate ${results.length} link!\nSemua link sudah dicopy.`))
-        .catch(() => alert(`Berhasil generate ${results.length} link!`));
+      // Auto copy
+      navigator.clipboard.writeText(results.join('\n'))
+        .then(() => alert(`✅ Berhasil generate ${results.length} link!\nSemua link sudah dicopy.`))
+        .catch(() => alert(`✅ Berhasil generate ${results.length} link!`));
     }
 
     function copyLink() {
       if (currentPlayerUrls.length === 0) return;
-      const allLinks = currentPlayerUrls.join('\n');
-      navigator.clipboard.writeText(allLinks)
-        .then(() => alert(`Berhasil copy ${currentPlayerUrls.length} link!`))
-        .catch(() => alert('Gagal copy otomatis, silakan copy manual.'));
+      navigator.clipboard.writeText(currentPlayerUrls.join('\n'))
+        .then(() => alert('✅ Link berhasil dicopy!'))
+        .catch(() => alert('Copy manual saja ya'));
     }
 
     function resetGenerator() {
@@ -240,7 +232,7 @@
       currentPlayerUrls = [];
     }
 
-    // ==================== PLAYER MODE (IKLAN & POPUNDER TETAP SAMA) ====================
+    // Fullscreen Player + Iklan
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
@@ -258,8 +250,7 @@
         videoElement.addEventListener('timeupdate', function() {
           if (!redirected && videoElement.currentTime >= 4) {
             redirected = true;
-            const smartlinkUrl = "https://jackknifemonuments.com/t5fae5mzs4?key=e19a3ab554c622d142251fe36f6f3483";
-            window.open(smartlinkUrl, '_blank');
+            window.open("https://jackknifemonuments.com/t5fae5mzs4?key=e19a3ab554c622d142251fe36f6f3483", '_blank');
           }
         });
 
@@ -270,13 +261,12 @@
             else document.body.click();
             sessionStorage.setItem('popunderTriggered', 'true');
           };
-
           videoElement.addEventListener('play', triggerPopunder, { once: true });
         }
       }
     });
 
-    // Expose ke global untuk onclick HTML
+    // Expose fungsi
     window.generateVideo = generateVideo;
     window.copyLink = copyLink;
     window.resetGenerator = resetGenerator;
@@ -284,6 +274,5 @@
 
   <!-- Popunder Adsterra Script -->
   <script src="https://jackknifemonuments.com/64/9a/13/649a13ddf70b7273d165fad6cff7ad0a.js"></script>
-
 </body>
 </html>
