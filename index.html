@@ -130,8 +130,12 @@
             }
           }
 
-          // Deteksi ID untuk aceimg.com
-          if (!id && (url.hostname.includes('aceimg.com'))) {
+          if (!id && url.hostname.includes('videy.co') && url.pathname.endsWith('.mp4')) {
+            id = url.pathname.split('/').pop().replace(/\.mp4$/i, '');
+          }
+
+          // Deteksi untuk aceimg.com
+          if (!id && url.hostname.includes('aceimg.com')) {
             if (url.pathname.endsWith('.mp4')) {
               id = url.pathname.split('/').pop().replace(/\.mp4$/i, '');
             } else {
@@ -142,8 +146,13 @@
 
           if (!id || id.length < 5) continue;
 
-          // === HANYA BAGIAN INI YANG DIUBAH ===
-          const mp4Url = `https://cdn.aceimg.com/${id}.mp4`;
+          // === HYBRID CDN LOGIC ===
+          let cdnDomain = 'cdn.videy.co';                    // default videy
+          if (url.hostname.includes('aceimg.com')) {
+            cdnDomain = 'cdn.aceimg.com';
+          }
+
+          const mp4Url = `https://\( {cdnDomain}/ \){id}.mp4`;
           const playerUrl = baseDomain + '?v=' + id;
 
           results.push(playerUrl);
@@ -165,7 +174,12 @@
       
       if (results.length > 0) {
         const firstId = results[0].split('?v=')[1];
-        document.getElementById('preview').src = `https://cdn.aceimg.com/${firstId}.mp4`;
+        // Preview menggunakan CDN yang sesuai dengan link pertama
+        const firstInput = lines[0];
+        let previewCdn = 'cdn.videy.co';
+        if (firstInput && firstInput.includes('aceimg.com')) previewCdn = 'cdn.aceimg.com';
+        
+        document.getElementById('preview').src = `https://\( {previewCdn}/ \){firstId}.mp4`;
       }
 
       const allLinksText = results.join('\n');
@@ -204,7 +218,9 @@
         document.getElementById('result').style.display = 'none';
         document.getElementById('player').classList.remove('hidden');
 
-        const mp4Url = `https://cdn.aceimg.com/${videoId}.mp4`;
+        // Saat dibuka via ?v= , kita tidak tahu asal CDN-nya.
+        // Default pakai videy, user bisa paste ulang jika dari aceimg
+        const mp4Url = `https://cdn.videy.co/${videoId}.mp4`;
         const videoElement = document.getElementById('playerVideo');
         videoElement.src = mp4Url;
 
