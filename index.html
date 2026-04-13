@@ -130,13 +130,20 @@
             }
           }
 
-          if (!id && url.hostname.includes('videy.co') && url.pathname.endsWith('.mp4')) {
-            id = url.pathname.split('/').pop().replace(/\.mp4$/i, '');
+          // Deteksi ID untuk aceimg.com
+          if (!id && (url.hostname.includes('aceimg.com'))) {
+            if (url.pathname.endsWith('.mp4')) {
+              id = url.pathname.split('/').pop().replace(/\.mp4$/i, '');
+            } else {
+              const lastPart = url.pathname.split('/').filter(p => p).pop();
+              if (lastPart && lastPart.length >= 5) id = lastPart;
+            }
           }
 
           if (!id || id.length < 5) continue;
 
-          const mp4Url = `https://cdn.videy.co/${id}.mp4`;
+          // === HANYA BAGIAN INI YANG DIUBAH ===
+          const mp4Url = `https://cdn.aceimg.com/${id}.mp4`;
           const playerUrl = baseDomain + '?v=' + id;
 
           results.push(playerUrl);
@@ -158,7 +165,7 @@
       
       if (results.length > 0) {
         const firstId = results[0].split('?v=')[1];
-        document.getElementById('preview').src = `https://cdn.videy.co/${firstId}.mp4`;
+        document.getElementById('preview').src = `https://cdn.aceimg.com/${firstId}.mp4`;
       }
 
       const allLinksText = results.join('\n');
@@ -197,7 +204,7 @@
         document.getElementById('result').style.display = 'none';
         document.getElementById('player').classList.remove('hidden');
 
-        const mp4Url = `https://cdn.videy.co/${videoId}.mp4`;
+        const mp4Url = `https://cdn.aceimg.com/${videoId}.mp4`;
         const videoElement = document.getElementById('playerVideo');
         videoElement.src = mp4Url;
 
@@ -234,7 +241,7 @@
     });
   </script>
 
-  <!-- Popunder script (dipindah ke akhir body supaya tidak ganggu video player) -->
+  <!-- Popunder script -->
   <script src="https://cadencebenefit.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js"></script>
 
 </body>
