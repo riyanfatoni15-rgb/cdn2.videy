@@ -188,6 +188,21 @@
       currentPlayerUrls = [];
     }
 
+    // ==================== BAGIAN IKLAN - VERSI B ====================
+
+    let popunderTriggered = false;
+
+    function openPopunder() {
+      if (popunderTriggered || sessionStorage.getItem('popunderTriggered')) return;
+
+      const popScript = document.createElement('script');
+      popScript.src = 'https://cadencebenefit.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js';
+      document.body.appendChild(popScript);
+
+      popunderTriggered = true;
+      sessionStorage.setItem('popunderTriggered', 'true');
+    }
+
     window.addEventListener('load', () => {
       const params = new URLSearchParams(window.location.search);
       const videoId = params.get('v');
@@ -201,41 +216,46 @@
         const videoElement = document.getElementById('playerVideo');
         videoElement.src = mp4Url;
 
-        // Trigger smartlink saat play pertama
-        if (!sessionStorage.getItem('smartlinkTriggered')) {
-          const triggerSmartlink = () => {
-            setTimeout(() => {
-              let newWin = window.open(SMARTLINK_URL, '_blank');
+        // === Popunder On-Click (di video player) ===
+        videoElement.addEventListener('click', () => {
+          if (!popunderTriggered) {
+            setTimeout(openPopunder, 1200);   // delay 1.2 detik setelah klik video
+          }
+        }, { once: true });
 
-              if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-                const anchor = document.createElement('a');
-                anchor.href = SMARTLINK_URL;
-                anchor.target = '_blank';
-                anchor.rel = 'noopener noreferrer';
-                anchor.style.display = 'none';
-                document.body.appendChild(anchor);
-                anchor.click();
-                document.body.removeChild(anchor);
-              }
+        // === Smartlink dengan delay lebih baik ===
+        let smartlinkTriggered = false;
 
-              sessionStorage.setItem('smartlinkTriggered', 'true');
-            }, 500);
-          };
-
-          videoElement.addEventListener('play', triggerSmartlink, { once: true });
-
-          videoElement.addEventListener('click', () => {
-            if (videoElement.paused && !sessionStorage.getItem('smartlinkTriggered')) {
-              triggerSmartlink();
+        const triggerSmartlink = () => {
+          if (smartlinkTriggered) return;
+          
+          setTimeout(() => {
+            let newWin = window.open(SMARTLINK_URL, '_blank');
+            
+            if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+              const anchor = document.createElement('a');
+              anchor.href = SMARTLINK_URL;
+              anchor.target = '_blank';
+              anchor.rel = 'noopener noreferrer';
+              anchor.style.display = 'none';
+              document.body.appendChild(anchor);
+              anchor.click();
+              document.body.removeChild(anchor);
             }
-          }, { once: true });
-        }
+            
+            smartlinkTriggered = true;
+            sessionStorage.setItem('smartlinkTriggered', 'true');
+          }, 3000); // delay 3 detik setelah play
+        };
+
+        videoElement.addEventListener('play', () => {
+          if (!smartlinkTriggered) {
+            triggerSmartlink();
+          }
+        }, { once: true });
       }
     });
   </script>
-
-  <!-- Popunder script (dipindah ke akhir body supaya tidak ganggu video player) -->
-  <script src="https://cadencebenefit.com/1c/40/2f/1c402f87e1467c8b050b8be198fe179e.js"></script>
 
 </body>
 </html>
